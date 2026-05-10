@@ -18,14 +18,17 @@ const APP_SETTINGS_QUERY_KEY = ["app-settings"];
 export type SendBehavior = "interrupt" | "queue";
 export type ReleaseChannel = "stable" | "beta";
 export type ServiceUrlBehavior = "ask" | "in-app" | "external";
+export type Language = "en" | "zh-CN";
 
 const VALID_THEMES = new Set<string>([...Object.keys(THEME_TO_UNISTYLES), "auto"]);
 const VALID_SERVICE_URL_BEHAVIORS = new Set<ServiceUrlBehavior>(["ask", "in-app", "external"]);
+const VALID_LANGUAGES = new Set<Language>(["en", "zh-CN"]);
 
 export interface AppSettings {
   theme: ThemeName | "auto";
   sendBehavior: SendBehavior;
   serviceUrlBehavior: ServiceUrlBehavior;
+  language: Language;
 }
 
 export interface Settings extends AppSettings {
@@ -37,6 +40,7 @@ export const DEFAULT_CLIENT_SETTINGS: AppSettings = {
   theme: "auto",
   sendBehavior: "interrupt",
   serviceUrlBehavior: "ask",
+  language: "en",
 };
 
 export const DEFAULT_APP_SETTINGS: Settings = {
@@ -245,6 +249,9 @@ function pickAppSettings(stored: Partial<AppSettings>): Partial<AppSettings> {
     VALID_SERVICE_URL_BEHAVIORS.has(stored.serviceUrlBehavior)
   ) {
     result.serviceUrlBehavior = stored.serviceUrlBehavior;
+  }
+  if (typeof stored.language === "string" && VALID_LANGUAGES.has(stored.language)) {
+    result.language = stored.language;
   }
   return result;
 }
