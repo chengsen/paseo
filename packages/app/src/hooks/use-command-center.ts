@@ -22,6 +22,7 @@ import { resolveWorkspaceIdByExecutionDirectory } from "@/utils/workspace-execut
 import { navigateToPreparedWorkspaceTab } from "@/utils/workspace-navigation";
 import { focusWithRetries } from "@/utils/web-focus";
 import { useActiveServerId } from "@/hooks/use-active-server-id";
+import { useTranslation } from "@/i18n";
 
 const EMPTY_AGENTS: AggregatedAgent[] = [];
 const EMPTY_ACTION_ITEMS: CommandCenterActionItem[] = [];
@@ -60,23 +61,27 @@ interface CommandCenterActionDefinition {
   routeKind: "settings" | "none";
 }
 
-const COMMAND_CENTER_ACTIONS: readonly CommandCenterActionDefinition[] = [
-  {
-    id: "new-agent",
-    title: "Open project",
-    icon: "plus",
-    actionId: "new-agent",
-    keywords: ["open", "project", "folder", "workspace", "repo"],
-    routeKind: "none",
-  },
-  {
-    id: "settings",
-    title: "Settings",
-    icon: "settings",
-    keywords: ["settings", "preferences", "config", "configuration"],
-    routeKind: "settings",
-  },
-];
+function useCommandCenterActions() {
+  const { t } = useTranslation();
+  return [
+    {
+      id: "new-agent",
+      title: "Open project",
+      icon: "plus" as const,
+      actionId: "new-agent",
+      keywords: ["open", "project", "folder", "workspace", "repo"],
+      routeKind: "none" as const,
+    },
+    {
+      id: "settings",
+      title: t.commandCenter.settings,
+      icon: "settings" as const,
+      actionId: "settings",
+      keywords: ["settings", "preferences", "config", "configuration"],
+      routeKind: "settings" as const,
+    },
+  ];
+}
 
 function matchesActionQuery(query: string, action: CommandCenterActionDefinition): boolean {
   const normalized = query.trim().toLowerCase();
@@ -123,6 +128,7 @@ function resolveActionShortcutKeys(
 }
 
 export function useCommandCenter() {
+  const { t: _t } = useTranslation();
   const pathname = usePathname();
   const routeActiveServerId = useActiveServerId();
   const { overrides } = useKeyboardShortcutOverrides();
@@ -157,21 +163,23 @@ export function useCommandCenter() {
     return buildSettingsRoute();
   }, []);
 
+  const commandCenterActions = useCommandCenterActions();
+
   const actionItems = useMemo(() => {
     if (!open) {
       return EMPTY_ACTION_ITEMS;
     }
-    return COMMAND_CENTER_ACTIONS.filter((action) =>
-      matchesActionQuery(query, action),
-    ).map<CommandCenterActionItem>((action) => ({
-      kind: "action",
-      id: action.id,
-      title: action.title,
-      icon: action.icon,
-      route: action.routeKind === "settings" ? settingsRoute : undefined,
-      shortcutKeys: resolveActionShortcutKeys(action.actionId, overrides),
-    }));
-  }, [open, query, settingsRoute, overrides]);
+    return commandCenterActions
+      .filter((action) => matchesActionQuery(query, action))
+      .map<CommandCenterActionItem>((action) => ({
+        kind: "action",
+        id: action.id,
+        title: action.title,
+        icon: action.icon,
+        route: action.routeKind === "settings" ? settingsRoute : undefined,
+        shortcutKeys: resolveActionShortcutKeys(action.actionId, overrides),
+      }));
+  }, [open, query, settingsRoute, overrides, commandCenterActions]);
 
   const items = useMemo(() => {
     if (!open) {

@@ -11,6 +11,7 @@ import type { SidebarStateBucket } from "@/utils/sidebar-agent-state";
 import { isEmphasizedStatusDotBucket } from "@/utils/status-dot-color";
 import { shouldRenderSyncedStatusLoader } from "@/utils/status-loader";
 import type { Theme } from "@/styles/theme";
+import { useTranslation } from "@/i18n";
 
 export interface WorkspaceTabPresentation {
   key: string;
@@ -192,6 +193,7 @@ export function WorkspaceTabOptionRow({
     () => [styles.optionRow, active && styles.optionRowActive],
     [active],
   );
+  const { t } = useTranslation();
   return (
     <View style={optionRowStyle}>
       <Pressable onPress={onPress} style={pressableStyle}>
@@ -200,7 +202,7 @@ export function WorkspaceTabOptionRow({
         </View>
         <View style={styles.optionContent}>
           <Text numberOfLines={1} style={styles.optionLabel}>
-            {presentation.titleState === "loading" ? "Loading..." : presentation.label}
+            {presentation.titleState === "loading" ? t.common.loading : presentation.label}
           </Text>
         </View>
       </Pressable>

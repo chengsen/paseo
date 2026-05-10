@@ -60,12 +60,14 @@ import { getModeVisuals, type AgentModeColorTier } from "@server/server/agent/pr
 import {
   getFeatureHighlightColor,
   getFeatureTooltip,
-  getStatusSelectorHint,
   resolveAgentModelSelection,
+  type ExplainedStatusSelector,
 } from "@/components/agent-status-bar.utils";
 import { isWeb as platformIsWeb } from "@/constants/platform";
 import { useToast } from "@/contexts/toast-context";
 import { toErrorMessage } from "@/utils/error-messages";
+import { useTranslation } from "@/i18n";
+import type { Translation } from "@/i18n/translations/en";
 
 interface StatusOption {
   id: string;
@@ -190,11 +192,12 @@ function resolveDisplayModel(
   isModelLoading: boolean,
   modelOptions: StatusOption[] | undefined,
   selectedModelId: string | undefined,
+  t: Translation,
 ) {
   if (isModelLoading && (!modelOptions || modelOptions.length === 0)) {
-    return "Loading models...";
+    return t.agent.loadingModels;
   }
-  return findOptionLabel(modelOptions, selectedModelId, "Select model");
+  return findOptionLabel(modelOptions, selectedModelId, t.agent.selectModel);
 }
 
 function resolveHasAnyControl({
@@ -400,9 +403,10 @@ function compareAvailableModes(a: AgentMode[], b: AgentMode[]): boolean {
 function resolveAgentDisplayMode(
   availableModes: AgentMode[],
   currentModeId: string | null | undefined,
+  fallbackLabel: string,
 ): string {
   const found = availableModes.find((mode) => mode.id === currentModeId);
-  return found?.label || currentModeId || "default";
+  return found?.label || currentModeId || fallbackLabel;
 }
 
 function buildOpenChangeHandler(
@@ -490,6 +494,7 @@ function ControlledStatusBar({
   onModelSelectorOpen,
 }: ControlledAgentStatusBarProps) {
   const { theme } = useUnistyles();
+  const { t } = useTranslation();
   const [prefsOpen, setPrefsOpen] = useState(false);
   const [openSelector, setOpenSelector] = useState<StatusSelector | null>(null);
 
@@ -507,13 +512,13 @@ function ControlledStatusBar({
     onSelectThinkingOption && thinkingOptions && thinkingOptions.length > 0,
   );
 
-  const displayProvider = findOptionLabel(providerOptions, selectedProviderId, "Provider");
-  const displayMode = findOptionLabel(modeOptions, selectedModeId, "Default");
-  const displayModel = resolveDisplayModel(isModelLoading, modelOptions, selectedModelId);
+  const displayProvider = findOptionLabel(providerOptions, selectedProviderId, t.agent.provider);
+  const displayMode = findOptionLabel(modeOptions, selectedModeId, t.agent.default);
+  const displayModel = resolveDisplayModel(isModelLoading, modelOptions, selectedModelId, t);
   const displayThinking = findOptionLabel(
     thinkingOptions,
     selectedThinkingOptionId,
-    thinkingOptions?.[0]?.label ?? "Unknown",
+    thinkingOptions?.[0]?.label ?? t.common.unknown,
   );
 
   const { icon: ModeIconComponent, color: modeIconColor } = resolveModeVisualsForProvider(
@@ -866,8 +871,22 @@ interface DesktopStatusBarContentProps {
 
 const DESKTOP_SEARCH_THRESHOLD = 6;
 
+function getTranslatedSelectorHint(selector: ExplainedStatusSelector, t: Translation): string {
+  switch (selector) {
+    case "thinking":
+      return t.agent.thinkingMode;
+    case "model":
+      return t.agent.changeModel;
+    case "mode":
+      return t.agent.changePermissionMode;
+    default:
+      throw new Error("unreachable");
+  }
+}
+
 function DesktopStatusBarContent(props: DesktopStatusBarContentProps) {
   const { theme } = useUnistyles();
+  const { t } = useTranslation();
   const {
     provider,
     providerOptions,
@@ -933,7 +952,7 @@ function DesktopStatusBarContent(props: DesktopStatusBarContentProps) {
             onPress={handleProviderPress}
             style={providerPressableStyle}
             accessibilityRole="button"
-            accessibilityLabel="Select agent provider"
+            accessibilityLabel={t.agent.selectAgentProvider}
             testID="agent-provider-selector"
           >
             <Text style={styles.modeBadgeText}>{displayProvider}</Text>
@@ -978,7 +997,7 @@ function DesktopStatusBarContent(props: DesktopStatusBarContentProps) {
             </View>
           </TooltipTrigger>
           <TooltipContent side="top" align="center" offset={8}>
-            <Text style={styles.tooltipText}>{getStatusSelectorHint("model")}</Text>
+            <Text style={styles.tooltipText}>{getTranslatedSelectorHint("model", t)}</Text>
           </TooltipContent>
         </Tooltip>
       ) : null}
@@ -994,7 +1013,10 @@ function DesktopStatusBarContent(props: DesktopStatusBarContentProps) {
                 onPress={handleThinkingPress}
                 style={thinkingPressableStyle}
                 accessibilityRole="button"
-                accessibilityLabel={`Select thinking option (${displayThinking})`}
+                accessibilityLabel={t.agent.selectThinkingOptionWithValue.replace(
+                  "{value}",
+                  displayThinking,
+                )}
                 testID="agent-thinking-selector"
               >
                 <Brain size={theme.iconSize.md} color={theme.colors.foregroundMuted} />
@@ -1003,7 +1025,7 @@ function DesktopStatusBarContent(props: DesktopStatusBarContentProps) {
               </Pressable>
             </TooltipTrigger>
             <TooltipContent side="top" align="center" offset={8}>
-              <Text style={styles.tooltipText}>{getStatusSelectorHint("thinking")}</Text>
+              <Text style={styles.tooltipText}>{getTranslatedSelectorHint("thinking", t)}</Text>
             </TooltipContent>
           </Tooltip>
           <Combobox
@@ -1030,7 +1052,10 @@ function DesktopStatusBarContent(props: DesktopStatusBarContentProps) {
                 onPress={handleModePress}
                 style={modePressableStyle}
                 accessibilityRole="button"
-                accessibilityLabel={`Select agent mode (${selectedModeId ?? ""})`}
+                accessibilityLabel={t.agent.selectAgentModeWithValue.replace(
+                  "{value}",
+                  selectedModeId ?? "",
+                )}
                 testID="agent-mode-selector"
               >
                 {ModeIconComponent ? (
@@ -1041,7 +1066,7 @@ function DesktopStatusBarContent(props: DesktopStatusBarContentProps) {
               </Pressable>
             </TooltipTrigger>
             <TooltipContent side="top" align="center" offset={8}>
-              <Text style={styles.tooltipText}>{getStatusSelectorHint("mode")}</Text>
+              <Text style={styles.tooltipText}>{getTranslatedSelectorHint("mode", t)}</Text>
             </TooltipContent>
           </Tooltip>
           <Combobox
@@ -1119,6 +1144,7 @@ interface SheetStatusBarContentProps {
 
 function SheetStatusBarContent(props: SheetStatusBarContentProps) {
   const { theme } = useUnistyles();
+  const { t } = useTranslation();
   const {
     provider,
     modeOptions,
@@ -1170,7 +1196,7 @@ function SheetStatusBarContent(props: SheetStatusBarContentProps) {
         onPress={handleOpenPrefs}
         style={prefsButtonStyle}
         accessibilityRole="button"
-        accessibilityLabel="Agent preferences"
+        accessibilityLabel={t.agent.agentPreferences}
         testID="agent-preferences-button"
       >
         {ProviderIcon ? (
@@ -1182,7 +1208,7 @@ function SheetStatusBarContent(props: SheetStatusBarContentProps) {
       </Pressable>
 
       <AdaptiveModalSheet
-        title="Preferences"
+        title={t.agent.preferences}
         visible={prefsOpen}
         onClose={handleClosePrefs}
         testID="agent-preferences-sheet"
@@ -1217,7 +1243,7 @@ function SheetStatusBarContent(props: SheetStatusBarContentProps) {
                 disabled={disabled || !canSelectThinking}
                 style={sheetThinkingPressableStyle}
                 accessibilityRole="button"
-                accessibilityLabel="Select thinking option"
+                accessibilityLabel={t.agent.selectThinkingOption}
                 testID="agent-preferences-thinking"
               >
                 <Brain size={theme.iconSize.md} color={theme.colors.foregroundMuted} />
@@ -1245,7 +1271,7 @@ function SheetStatusBarContent(props: SheetStatusBarContentProps) {
                 disabled={disabled || !canSelectMode}
                 style={sheetModePressableStyle}
                 accessibilityRole="button"
-                accessibilityLabel="Select agent mode"
+                accessibilityLabel={t.agent.selectAgentMode}
                 testID="agent-preferences-mode"
               >
                 {ModeIconComponent ? (
@@ -1424,6 +1450,7 @@ function SheetFeatureItem({
   onSetFeature?: (featureId: string, value: unknown) => void;
 }) {
   const { theme } = useUnistyles();
+  const { t } = useTranslation();
   const featureSelector: StatusSelector = `feature-${feature.id}`;
 
   const handleFeatureOpenChange = useMemo(
@@ -1475,7 +1502,7 @@ function SheetFeatureItem({
             )}
           />
           <Text style={styles.sheetSelectText}>{feature.label}</Text>
-          <Text style={styles.modeBadgeText}>{feature.value ? "On" : "Off"}</Text>
+          <Text style={styles.modeBadgeText}>{feature.value ? t.agent.on : t.agent.off}</Text>
         </Pressable>
       </View>
     );
@@ -1667,7 +1694,13 @@ export const AgentStatusBar = memo(function AgentStatusBar({
     [agent?.provider, models],
   );
 
-  const displayMode = resolveAgentDisplayMode(availableModes, agent?.currentModeId);
+  const { t } = useTranslation();
+
+  const displayMode = resolveAgentDisplayMode(
+    availableModes,
+    agent?.currentModeId,
+    t.agent.default,
+  );
 
   const modelSelection = resolveAgentModelSelection({
     models,
@@ -1874,15 +1907,17 @@ export function DraftAgentStatusBar({
 }: DraftAgentStatusBarProps) {
   const { preferences, updatePreferences } = useFormPreferences();
 
+  const { t } = useTranslation();
+
   const mappedModeOptions = useMemo<StatusOption[]>(() => {
     if (modeOptions.length === 0) {
-      return [{ id: "", label: "Default" }];
+      return [{ id: "", label: t.agent.default }];
     }
     return modeOptions.map((mode) => ({
       id: mode.id,
       label: mode.label,
     }));
-  }, [modeOptions]);
+  }, [modeOptions, t.agent.default]);
 
   const mappedThinkingOptions = useMemo<StatusOption[]>(() => {
     return thinkingOptions.map((option) => ({ id: option.id, label: option.label }));

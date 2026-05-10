@@ -31,6 +31,7 @@ import {
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
 import { useIsCompactFormFactor } from "@/constants/layout";
+import { useTranslation } from "@/i18n";
 import { Check, CheckCircle } from "lucide-react-native";
 import { BottomSheetBackdrop, BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -387,6 +388,7 @@ export function ContextMenuContent({
 }>): ReactElement | null {
   const context = useContextMenuContext("ContextMenuContent");
   const { theme } = useUnistyles();
+  const { t } = useTranslation();
   const webScrollbarStyle = useWebScrollbarStyle();
   const isMobile = useIsCompactFormFactor();
   const useMobileSheet = isMobile && mobileMode === "sheet";
@@ -561,7 +563,7 @@ export function ContextMenuContent({
       <View style={styles.overlay}>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Menu backdrop"
+          accessibilityLabel={t.menuBackdrop.menuBackdrop}
           style={styles.backdrop}
           onPress={handleClose}
           testID={testID ? `${testID}-backdrop` : undefined}

@@ -9,7 +9,7 @@ import {
 export interface ShortcutRoutingContext {
   pathname: string;
   isMobile: boolean;
-  sidebarShortcutTargets: ReadonlyArray<SidebarShortcutWorkspaceTarget>;
+  sidebarShortcutTargets: readonly SidebarShortcutWorkspaceTarget[];
   navigationActiveWorkspace: SidebarShortcutWorkspaceTarget | null;
   commandCenterOpen: boolean;
   shortcutsDialogOpen: boolean;

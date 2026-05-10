@@ -1,5 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { useWorkspaceLayoutStore } from "@/stores/workspace-layout-store";
+import { navigateToPreparedWorkspaceTab, prepareWorkspaceTab } from "@/utils/workspace-navigation";
+
 const { platformState, routerMock } = vi.hoisted(() => ({
   platformState: {
     isWeb: true,
@@ -37,9 +40,6 @@ vi.mock("@react-native-async-storage/async-storage", () => {
     },
   };
 });
-
-import { useWorkspaceLayoutStore } from "@/stores/workspace-layout-store";
-import { navigateToPreparedWorkspaceTab, prepareWorkspaceTab } from "@/utils/workspace-navigation";
 
 const SERVER_ID = "server-1";
 const WORKSPACE_ID = "/repo/worktree";

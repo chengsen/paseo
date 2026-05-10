@@ -7,6 +7,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ProviderSnapshotEntry } from "@server/server/agent/agent-sdk-types";
 import type { MutableDaemonConfig } from "@server/shared/messages";
 
+import { ProvidersSection } from "./providers-section";
+
 const { theme, snapshotState, configState, patchConfigMock, refreshMock } = vi.hoisted(() => ({
   theme: {
     spacing: { 1: 4, "1.5": 6, 2: 8, 3: 12, 4: 16, 6: 24 },
@@ -92,7 +94,11 @@ vi.mock("react-native-unistyles", () => ({
 }));
 
 vi.mock("lucide-react-native", () => {
-  const icon = (name: string) => () => React.createElement("span", { "data-icon": name });
+  const icon = (name: string) => {
+    const Icon = () => React.createElement("span", { "data-icon": name });
+    Icon.displayName = `Icon(${name})`;
+    return Icon;
+  };
   return {
     ChevronRight: icon("ChevronRight"),
     Plus: icon("Plus"),
@@ -173,8 +179,6 @@ vi.mock("@/hooks/use-daemon-config", () => ({
 vi.mock("@/runtime/host-runtime", () => ({
   useHostRuntimeIsConnected: () => true,
 }));
-
-import { ProvidersSection } from "./providers-section";
 
 const claudeEntry: ProviderSnapshotEntry = {
   provider: "claude",

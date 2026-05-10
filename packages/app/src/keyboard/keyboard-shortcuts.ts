@@ -1276,6 +1276,7 @@ export function getDefaultKeysForAction(
 export function buildKeyboardShortcutHelpSections(
   input: KeyboardShortcutPlatformContext,
   bindings: readonly ParsedShortcutBinding[] = DEFAULT_BINDINGS,
+  sectionTitles?: Record<ShortcutSectionId, string>,
 ): KeyboardShortcutHelpSection[] {
   const seenRows = new Set<string>();
   const rowsBySection = new Map<ShortcutSectionId, KeyboardShortcutHelpRow[]>([
@@ -1328,7 +1329,7 @@ export function buildKeyboardShortcutHelpSections(
     return [
       {
         id: sectionId,
-        title: SHORTCUT_HELP_SECTION_TITLES[sectionId],
+        title: sectionTitles?.[sectionId] ?? SHORTCUT_HELP_SECTION_TITLES[sectionId],
         rows,
       },
     ];

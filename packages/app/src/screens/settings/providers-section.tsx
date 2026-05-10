@@ -13,6 +13,8 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Switch } from "@/components/ui/switch";
 import { SettingsSection } from "@/screens/settings/settings-section";
 import { ChevronRight, Plus, RotateCw } from "lucide-react-native";
+import { useTranslation } from "@/i18n";
+import type { Translation } from "@/i18n/translations/en";
 
 type ProviderDefinition = ReturnType<typeof buildProviderDefinitions>[number];
 type ProviderEntry = NonNullable<ReturnType<typeof useProvidersSnapshot>["entries"]>[number];
@@ -25,18 +27,24 @@ interface ProviderStatus {
   modelCount: number | null;
 }
 
-function getProviderStatus(status: string, enabled: boolean, modelCount: number): ProviderStatus {
-  if (!enabled) return { tone: "muted", label: "Disabled", modelCount: null };
-  if (status === "loading") return { tone: "loading", label: "Loading", modelCount: null };
-  if (status === "error") return { tone: "danger", label: "Error", modelCount: null };
+function getProviderStatus(
+  status: string,
+  enabled: boolean,
+  modelCount: number,
+  t: Translation,
+): ProviderStatus {
+  if (!enabled) return { tone: "muted", label: t.providers.disabled, modelCount: null };
+  if (status === "loading")
+    return { tone: "loading", label: t.providers.loadingStatus, modelCount: null };
+  if (status === "error") return { tone: "danger", label: t.providers.error, modelCount: null };
   if (status === "ready") {
     return {
       tone: "success",
-      label: "Available",
+      label: t.providers.available,
       modelCount: modelCount > 0 ? modelCount : null,
     };
   }
-  return { tone: "warning", label: "Not installed", modelCount: null };
+  return { tone: "warning", label: t.providers.notInstalled, modelCount: null };
 }
 
 interface ProviderRowProps {
@@ -45,6 +53,7 @@ interface ProviderRowProps {
   enabled: boolean;
   isToggling: boolean;
   isFirst: boolean;
+  t: Translation;
   onPress: (providerId: string) => void;
   onToggleEnabled: (providerId: string, enabled: boolean) => void;
 }
@@ -55,6 +64,7 @@ function ProviderRow({
   enabled,
   isToggling,
   isFirst,
+  t,
   onPress,
   onToggleEnabled,
 }: ProviderRowProps) {
@@ -68,7 +78,7 @@ function ProviderRow({
       ? entry.error.trim()
       : null;
   const modelCount = entry.models?.length ?? 0;
-  const providerStatus = getProviderStatus(entry.status, enabled, modelCount);
+  const providerStatus = getProviderStatus(entry.status, enabled, modelCount, t);
 
   const handlePress = useCallback(() => {
     onPress(def.id);
@@ -111,7 +121,7 @@ function ProviderRow({
                   {def.label}
                 </Text>
                 <Text style={styles.separator}>·</Text>
-                <StatusIndicator status={providerStatus} />
+                <StatusIndicator status={providerStatus} t={t} />
               </View>
               {providerError ? (
                 <Text style={styles.errorText} numberOfLines={3}>
@@ -145,7 +155,7 @@ function getDotColor(tone: StatusTone, theme: ReturnType<typeof useUnistyles>["t
   }
 }
 
-function StatusIndicator({ status }: { status: ProviderStatus }) {
+function StatusIndicator({ status, t }: { status: ProviderStatus; t: Translation }) {
   const { theme } = useUnistyles();
   const dotStyle = useMemo(
     () => [styles.statusDot, { backgroundColor: getDotColor(status.tone, theme) }],
@@ -164,7 +174,9 @@ function StatusIndicator({ status }: { status: ProviderStatus }) {
         <>
           <Text style={styles.separator}>·</Text>
           <Text style={styles.statusLabel}>
-            {status.modelCount === 1 ? "1 model" : `${status.modelCount} models`}
+            {status.modelCount === 1
+              ? t.providers.modelSingular
+              : t.providers.modelPlural.replace("{count}", String(status.modelCount))}
           </Text>
         </>
       ) : null}
@@ -177,6 +189,7 @@ export interface ProvidersSectionProps {
 }
 
 export function ProvidersSection({ serverId }: ProvidersSectionProps) {
+  const { t } = useTranslation();
   const { theme } = useUnistyles();
   const isConnected = useHostRuntimeIsConnected(serverId);
   const { entries, isLoading, isRefreshing, refresh } = useProvidersSnapshot(serverId);
@@ -204,14 +217,14 @@ export function ProvidersSection({ serverId }: ProvidersSectionProps) {
         await patchConfig({ providers: { [providerId]: { enabled } } });
       } catch (error) {
         Alert.alert(
-          "Unable to update provider",
+          t.providers.unableToUpdate,
           error instanceof Error ? error.message : String(error),
         );
       } finally {
         setPendingProviderId((current) => (current === providerId ? null : current));
       }
     },
-    [patchConfig],
+    [patchConfig, t],
   );
 
   const headerActions = useMemo(
@@ -223,11 +236,11 @@ export function ProvidersSection({ serverId }: ProvidersSectionProps) {
             hitSlop={8}
             style={settingsStyles.sectionHeaderLink}
             accessibilityRole="button"
-            accessibilityLabel="Add provider"
+            accessibilityLabel={t.providers.addProvider}
             testID="add-provider-button"
           >
             <Plus size={theme.iconSize.sm} color={theme.colors.foregroundMuted} />
-            <Text style={settingsStyles.sectionHeaderLinkText}>Add provider</Text>
+            <Text style={settingsStyles.sectionHeaderLinkText}>{t.providers.addProvider}</Text>
           </Pressable>
           <Pressable
             onPress={handleRefresh}
@@ -236,7 +249,9 @@ export function ProvidersSection({ serverId }: ProvidersSectionProps) {
             style={settingsStyles.sectionHeaderLink}
             accessibilityRole="button"
             accessibilityLabel={
-              providerRefreshInFlight ? "Refreshing providers" : "Refresh providers"
+              providerRefreshInFlight
+                ? t.providers.refreshingProviders
+                : t.providers.refreshProviders
             }
           >
             {providerRefreshInFlight ? (
@@ -253,6 +268,7 @@ export function ProvidersSection({ serverId }: ProvidersSectionProps) {
       handleOpenAddProvider,
       handleRefresh,
       providerRefreshInFlight,
+      t,
       theme.iconSize.sm,
       theme.colors.foregroundMuted,
     ],
@@ -261,19 +277,19 @@ export function ProvidersSection({ serverId }: ProvidersSectionProps) {
   return (
     <>
       <SettingsSection
-        title="Providers"
+        title={t.providers.title}
         trailing={headerActions}
         testID="host-page-providers-card"
         style={styles.sectionSpacing}
       >
         {!hasServer || !isConnected ? (
           <View style={EMPTY_CARD_STYLE}>
-            <Text style={styles.emptyText}>Connect to this host to see providers</Text>
+            <Text style={styles.emptyText}>{t.providers.connectToSee}</Text>
           </View>
         ) : null}
         {hasServer && isConnected && isLoading ? (
           <View style={EMPTY_CARD_STYLE}>
-            <Text style={styles.emptyText}>Loading...</Text>
+            <Text style={styles.emptyText}>{t.providers.loading}</Text>
           </View>
         ) : null}
         {hasServer && isConnected && !isLoading && providerDefinitions.length > 0 ? (
@@ -289,6 +305,7 @@ export function ProvidersSection({ serverId }: ProvidersSectionProps) {
                   enabled={entry.enabled ?? true}
                   isToggling={pendingProviderId === def.id}
                   isFirst={index === 0}
+                  t={t}
                   onPress={setDiagnosticProvider}
                   onToggleEnabled={handleToggleEnabled}
                 />

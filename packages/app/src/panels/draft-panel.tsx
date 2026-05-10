@@ -6,11 +6,13 @@ import { usePaneContext, usePaneFocus } from "@/panels/pane-context";
 import type { PanelRegistration } from "@/panels/panel-registry";
 import { useSessionStore } from "@/stores/session-store";
 import { normalizeAgentSnapshot } from "@/utils/agent-snapshots";
+import { useTranslation } from "@/i18n";
 
 function useDraftPanelDescriptor() {
+  const { t } = useTranslation();
   return {
-    label: "New Agent",
-    subtitle: "New Agent",
+    label: t.agent.newAgent,
+    subtitle: t.agent.newAgent,
     titleState: "ready" as const,
     icon: SquarePen,
     statusBucket: null,

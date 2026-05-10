@@ -5,6 +5,7 @@ import { Modal, Pressable, ScrollView, Text, TextInput, View } from "react-nativ
 import type { TextInputProps } from "react-native";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
 import { useIsCompactFormFactor } from "@/constants/layout";
+import { useTranslation } from "@/i18n";
 import { getOverlayRoot, OVERLAY_Z } from "../lib/overlay-root";
 import {
   BottomSheetBackdrop,
@@ -189,6 +190,7 @@ export function AdaptiveModalSheet({
   scrollable = true,
 }: AdaptiveModalSheetProps) {
   const { theme } = useUnistyles();
+  const { t } = useTranslation();
   const isMobile = useIsCompactFormFactor();
   const titleColor = theme.colors.foreground;
   const resolvedSnapPoints = useMemo(() => snapPoints ?? ["65%", "90%"], [snapPoints]);
@@ -245,7 +247,11 @@ export function AdaptiveModalSheet({
             {subtitle}
           </View>
           {headerActions ? <View style={styles.headerActions}>{headerActions}</View> : null}
-          <Pressable accessibilityLabel="Close" style={styles.closeButton} onPress={onClose}>
+          <Pressable
+            accessibilityLabel={t.common.close}
+            style={styles.closeButton}
+            onPress={onClose}
+          >
             <X size={16} color={theme.colors.foregroundMuted} />
           </Pressable>
         </View>
@@ -274,7 +280,7 @@ export function AdaptiveModalSheet({
           {subtitle}
         </View>
         {headerActions ? <View style={styles.headerActions}>{headerActions}</View> : null}
-        <Pressable accessibilityLabel="Close" style={styles.closeButton} onPress={onClose}>
+        <Pressable accessibilityLabel={t.common.close} style={styles.closeButton} onPress={onClose}>
           <X size={16} color={theme.colors.foregroundMuted} />
         </Pressable>
       </View>
@@ -295,7 +301,11 @@ export function AdaptiveModalSheet({
 
   const desktopContent = (
     <View style={styles.desktopOverlay} testID={testID}>
-      <Pressable accessibilityLabel="Dismiss" style={ABSOLUTE_FILL_STYLE} onPress={onClose} />
+      <Pressable
+        accessibilityLabel={t.common.close}
+        style={ABSOLUTE_FILL_STYLE}
+        onPress={onClose}
+      />
       <View style={desktopCardStyle}>
         {onFilesDropped ? (
           <FileDropZone onFilesDropped={onFilesDropped}>{cardInner}</FileDropZone>

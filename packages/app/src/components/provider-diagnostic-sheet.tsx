@@ -19,6 +19,7 @@ import { useProvidersSnapshot } from "@/hooks/use-providers-snapshot";
 import { useHostRuntimeClient } from "@/runtime/host-runtime";
 import { SettingsSection } from "@/screens/settings/settings-section";
 import { settingsStyles } from "@/styles/settings";
+import { useTranslation } from "@/i18n";
 import { resolveProviderLabel } from "@/utils/provider-definitions";
 import { formatTimeAgo } from "@/utils/time";
 import type { AgentModelDefinition, AgentProvider } from "@server/server/agent/agent-sdk-types";
@@ -93,6 +94,7 @@ function CustomModelsSection(props: {
   refresh: (providers?: AgentProvider[]) => Promise<void>;
 }) {
   const { provider, serverId, refresh } = props;
+  const { t } = useTranslation();
   const { theme } = useUnistyles();
   const { config, patchConfig } = useDaemonConfig(serverId);
   const [input, setInput] = useState("");
@@ -138,10 +140,16 @@ function CustomModelsSection(props: {
     ])
       .then(() => setInput(""))
       .catch((err) => {
-        setError(err instanceof Error ? err.message : "Failed to save model");
+        setError(err instanceof Error ? err.message : t.providers.failedToSaveModel);
       })
       .finally(() => setSaving(false));
-  }, [additionalModels, canAdd, patchAdditionalModels, trimmedInput]);
+  }, [
+    additionalModels,
+    canAdd,
+    patchAdditionalModels,
+    trimmedInput,
+    t.providers.failedToSaveModel,
+  ]);
 
   const handleDelete = useCallback(
     (modelId: string) => {
@@ -149,24 +157,24 @@ function CustomModelsSection(props: {
       setDeletingModelId(modelId);
       void patchAdditionalModels(additionalModels.filter((model) => model.id !== modelId))
         .catch((err) => {
-          setError(err instanceof Error ? err.message : "Failed to delete model");
+          setError(err instanceof Error ? err.message : t.providers.failedToDeleteModel);
         })
         .finally(() => {
           setDeletingModelId((current) => (current === modelId ? null : current));
         });
     },
-    [additionalModels, patchAdditionalModels],
+    [additionalModels, patchAdditionalModels, t.providers.failedToDeleteModel],
   );
 
   return (
-    <SettingsSection title="Custom models">
+    <SettingsSection title={t.providers.customModels}>
       <View style={settingsStyles.card}>
         <View style={INLINE_ROW_STYLE}>
           <AdaptiveTextInput
             value={input}
             onChangeText={setInput}
             onSubmitEditing={handleAdd}
-            placeholder="Model ID"
+            placeholder={t.providers.modelId}
             placeholderTextColor={theme.colors.foregroundMuted}
             autoCapitalize="none"
             autoCorrect={false}
@@ -179,9 +187,9 @@ function CustomModelsSection(props: {
             size="sm"
             onPress={handleAdd}
             disabled={!canAdd || saving}
-            accessibilityLabel="Add model"
+            accessibilityLabel={t.providers.addModel}
           >
-            {saving ? "Adding…" : "Add"}
+            {saving ? t.providers.adding : t.common.add}
           </Button>
         </View>
         {additionalModels.map((model) => (
@@ -203,11 +211,12 @@ function DiagnosticCodeBlock(props: {
   diagnostic: string | null;
   foregroundMutedColor: string;
 }) {
+  const { t } = useTranslation();
   if (props.loading && !props.diagnostic) {
     return (
       <View style={sheetStyles.codeBlockLoading}>
         <ActivityIndicator size="small" color={props.foregroundMutedColor} />
-        <Text style={sheetStyles.mutedText}>Running diagnostic…</Text>
+        <Text style={sheetStyles.mutedText}>{t.providers.runningDiagnostic}</Text>
       </View>
     );
   }
@@ -228,7 +237,7 @@ function DiagnosticCodeBlock(props: {
   }
   return (
     <View style={sheetStyles.codeBlockLoading}>
-      <Text style={sheetStyles.mutedText}>No diagnostic available</Text>
+      <Text style={sheetStyles.mutedText}>{t.providers.noDiagnosticAvailable}</Text>
     </View>
   );
 }
@@ -239,6 +248,7 @@ export function ProviderDiagnosticSheet({
   onClose,
   serverId,
 }: ProviderDiagnosticSheetProps) {
+  const { t } = useTranslation();
   const { theme } = useUnistyles();
   const client = useHostRuntimeClient(serverId);
   const { entries: snapshotEntries, refresh, isRefreshing } = useProvidersSnapshot(serverId);
@@ -254,13 +264,13 @@ export function ProviderDiagnosticSheet({
   const models = providerEntry?.models ?? [];
   const providerSnapshotRefreshing = providerEntry?.status === "loading";
   const providerErrorMessage =
-    providerEntry?.status === "error" ? (providerEntry.error ?? "Unknown error") : null;
+    providerEntry?.status === "error" ? (providerEntry.error ?? t.providers.unknownError) : null;
   const refreshInFlight = isRefreshing || providerSnapshotRefreshing || loading;
 
   const [clockTick, setClockTick] = useState(0);
   useEffect(() => {
     if (!visible) return;
-    const id = setInterval(() => setClockTick((t) => t + 1), 10_000);
+    const id = setInterval(() => setClockTick((prev) => prev + 1), 10_000);
     return () => clearInterval(id);
   }, [visible]);
   const fetchedAtLabel = useMemo(() => {
@@ -287,12 +297,12 @@ export function ProviderDiagnosticSheet({
         const result = await client.getProviderDiagnostic(provider);
         setDiagnostic(result.diagnostic);
       } catch (err) {
-        setDiagnostic(err instanceof Error ? err.message : "Failed to fetch diagnostic");
+        setDiagnostic(err instanceof Error ? err.message : t.providers.failedToFetchDiagnostic);
       } finally {
         setLoading(false);
       }
     },
-    [client, provider],
+    [client, provider, t.providers.failedToFetchDiagnostic],
   );
 
   const refreshButtonStyle = useCallback(
@@ -309,9 +319,9 @@ export function ProviderDiagnosticSheet({
       return;
     }
     void Promise.all([refresh([provider]), fetchDiagnostic()]).catch((err) => {
-      setDiagnostic(err instanceof Error ? err.message : "Failed to refresh provider");
+      setDiagnostic(err instanceof Error ? err.message : t.providers.failedToRefreshProvider);
     });
-  }, [fetchDiagnostic, provider, refresh]);
+  }, [fetchDiagnostic, provider, refresh, t.providers.failedToRefreshProvider]);
 
   const headerActions = useMemo(
     () => (
@@ -362,18 +372,20 @@ export function ProviderDiagnosticSheet({
           <Text style={settingsStyles.sectionHeaderTitle}>·</Text>
         ) : null}
         {fetchedAtLabel ? (
-          <Text style={settingsStyles.sectionHeaderTitle}>Updated {fetchedAtLabel}</Text>
+          <Text style={settingsStyles.sectionHeaderTitle}>
+            {t.providers.updated} {fetchedAtLabel}
+          </Text>
         ) : null}
       </View>
     );
-  }, [models.length, fetchedAtLabel]);
+  }, [models.length, fetchedAtLabel, t.providers.updated]);
 
   function renderModelsBody() {
     if (models.length === 0 && providerSnapshotRefreshing) {
       return (
         <View style={sheetStyles.emptyRow}>
           <ActivityIndicator size="small" color={theme.colors.foregroundMuted} />
-          <Text style={sheetStyles.mutedText}>Loading models…</Text>
+          <Text style={sheetStyles.mutedText}>{t.providers.loadingModels}</Text>
         </View>
       );
     }
@@ -388,7 +400,7 @@ export function ProviderDiagnosticSheet({
     if (models.length === 0) {
       return (
         <View style={sheetStyles.emptyRow}>
-          <Text style={sheetStyles.mutedText}>No models detected</Text>
+          <Text style={sheetStyles.mutedText}>{t.providers.noModelsDetected}</Text>
         </View>
       );
     }
@@ -396,7 +408,7 @@ export function ProviderDiagnosticSheet({
       return (
         <View style={sheetStyles.emptyRow}>
           <Search size={theme.iconSize.md} color={theme.colors.foregroundMuted} />
-          <Text style={sheetStyles.mutedText}>No models match your search</Text>
+          <Text style={sheetStyles.mutedText}>{t.providers.noModelsMatchSearch}</Text>
         </View>
       );
     }
@@ -413,7 +425,7 @@ export function ProviderDiagnosticSheet({
       snapPoints={DIAGNOSTIC_SHEET_SNAP_POINTS}
       headerActions={headerActions}
     >
-      <SettingsSection title="Diagnostic">
+      <SettingsSection title={t.providers.diagnostic}>
         <View style={settingsStyles.card}>
           <DiagnosticCodeBlock
             loading={loading}
@@ -427,7 +439,7 @@ export function ProviderDiagnosticSheet({
 
       <View>
         <View style={sheetStyles.modelsHeader}>
-          <Text style={settingsStyles.sectionHeaderTitle}>Models</Text>
+          <Text style={settingsStyles.sectionHeaderTitle}>{t.providers.models}</Text>
           {modelsTrailing}
         </View>
         <View style={settingsStyles.card}>
@@ -436,7 +448,7 @@ export function ProviderDiagnosticSheet({
             <AdaptiveTextInput
               value={query}
               onChangeText={setQuery}
-              placeholder="Search models"
+              placeholder={t.providers.searchModels}
               placeholderTextColor={theme.colors.foregroundMuted}
               autoCapitalize="none"
               autoCorrect={false}

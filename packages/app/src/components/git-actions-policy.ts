@@ -1,6 +1,7 @@
 import type { ReactElement } from "react";
 
 import type { ActionStatus } from "@/components/ui/dropdown-menu";
+import type { Translation } from "@/i18n/translations/en";
 
 export type GitActionId =
   | "commit"
@@ -55,6 +56,7 @@ export interface BuildGitActionsInput {
   shouldPromoteArchive: boolean;
   shipDefault: "merge" | "pr";
   runtime: Record<GitActionId, GitActionRuntimeState>;
+  t: Translation;
 }
 
 const REMOTE_ACTION_IDS: GitActionId[] = ["pull", "push", "pull-and-push"];
@@ -69,9 +71,9 @@ export function buildGitActions(input: BuildGitActionsInput): GitActions {
 
   allActions.set("commit", {
     id: "commit",
-    label: "Commit",
-    pendingLabel: "Committing...",
-    successLabel: "Committed",
+    label: input.t.gitActions.commit,
+    pendingLabel: input.t.gitActions.committing,
+    successLabel: input.t.gitActions.committed,
     disabled: input.runtime.commit.disabled,
     status: input.runtime.commit.status,
     icon: input.runtime.commit.icon,
@@ -80,9 +82,9 @@ export function buildGitActions(input: BuildGitActionsInput): GitActions {
 
   allActions.set("pull", {
     id: "pull",
-    label: "Pull",
-    pendingLabel: "Pulling...",
-    successLabel: "Pulled",
+    label: input.t.gitActions.pull,
+    pendingLabel: input.t.gitActions.pulling,
+    successLabel: input.t.gitActions.pulled,
     disabled: input.runtime.pull.disabled,
     status: input.runtime.pull.status,
     unavailableMessage: input.runtime.pull.disabled ? undefined : getPullUnavailableMessage(input),
@@ -92,9 +94,9 @@ export function buildGitActions(input: BuildGitActionsInput): GitActions {
 
   allActions.set("push", {
     id: "push",
-    label: "Push",
-    pendingLabel: "Pushing...",
-    successLabel: "Pushed",
+    label: input.t.gitActions.push,
+    pendingLabel: input.t.gitActions.pushing,
+    successLabel: input.t.gitActions.pushed,
     disabled: input.runtime.push.disabled,
     status: input.runtime.push.status,
     unavailableMessage: input.runtime.push.disabled ? undefined : getPushUnavailableMessage(input),
@@ -104,9 +106,9 @@ export function buildGitActions(input: BuildGitActionsInput): GitActions {
 
   allActions.set("pull-and-push", {
     id: "pull-and-push",
-    label: "Pull and push",
-    pendingLabel: "Pulling and pushing...",
-    successLabel: "Pulled and pushed",
+    label: input.t.gitActions.pullAndPush,
+    pendingLabel: input.t.gitActions.pullingAndPushing,
+    successLabel: input.t.gitActions.pulledAndPushed,
     disabled: input.runtime["pull-and-push"].disabled,
     status: input.runtime["pull-and-push"].status,
     unavailableMessage: input.runtime["pull-and-push"].disabled
@@ -120,9 +122,9 @@ export function buildGitActions(input: BuildGitActionsInput): GitActions {
 
   allActions.set("merge-branch", {
     id: "merge-branch",
-    label: `Merge into ${input.baseRefLabel}`,
-    pendingLabel: "Merging...",
-    successLabel: "Merged",
+    label: input.t.gitActions.mergeInto.replace("{baseRefLabel}", input.baseRefLabel),
+    pendingLabel: input.t.gitActions.merging,
+    successLabel: input.t.gitActions.merged,
     disabled: input.runtime["merge-branch"].disabled,
     status: input.runtime["merge-branch"].status,
     unavailableMessage: input.runtime["merge-branch"].disabled
@@ -134,9 +136,9 @@ export function buildGitActions(input: BuildGitActionsInput): GitActions {
 
   allActions.set("merge-from-base", {
     id: "merge-from-base",
-    label: `Update from ${input.baseRefLabel}`,
-    pendingLabel: "Updating...",
-    successLabel: "Updated",
+    label: input.t.gitActions.updateFrom.replace("{baseRefLabel}", input.baseRefLabel),
+    pendingLabel: input.t.gitActions.updating,
+    successLabel: input.t.gitActions.updated,
     disabled: input.runtime["merge-from-base"].disabled,
     status: input.runtime["merge-from-base"].status,
     unavailableMessage: input.runtime["merge-from-base"].disabled
@@ -148,15 +150,15 @@ export function buildGitActions(input: BuildGitActionsInput): GitActions {
 
   allActions.set("archive-worktree", {
     id: "archive-worktree",
-    label: "Archive worktree",
-    pendingLabel: "Archiving...",
-    successLabel: "Archived",
+    label: input.t.gitActions.archiveWorktree,
+    pendingLabel: input.t.gitActions.archiving,
+    successLabel: input.t.gitActions.archived,
     disabled: input.runtime["archive-worktree"].disabled,
     status: input.runtime["archive-worktree"].status,
     unavailableMessage:
       input.runtime["archive-worktree"].disabled || input.isPaseoOwnedWorktree
         ? undefined
-        : "Archive isn't available here because this workspace was not created as a Paseo worktree",
+        : input.t.gitActions.archiveUnavailable,
     icon: input.runtime["archive-worktree"].icon,
     handler: input.runtime["archive-worktree"].handler,
   });
@@ -208,15 +210,15 @@ function buildPrAction(input: BuildGitActionsInput): GitAction {
   if (input.hasPullRequest && input.pullRequestUrl) {
     return {
       id: "pr",
-      label: "View PR",
-      pendingLabel: "View PR",
-      successLabel: "View PR",
+      label: input.t.gitActions.viewPR,
+      pendingLabel: input.t.gitActions.viewPR,
+      successLabel: input.t.gitActions.viewPR,
       disabled: input.runtime.pr.disabled,
       status: input.runtime.pr.status,
       unavailableMessage:
         input.runtime.pr.disabled || input.githubFeaturesEnabled
           ? undefined
-          : "View PR isn't available right now because GitHub isn't connected",
+          : input.t.gitActions.viewPRUnavailable,
       icon: input.runtime.pr.icon,
       handler: input.runtime.pr.handler,
     };
@@ -224,9 +226,9 @@ function buildPrAction(input: BuildGitActionsInput): GitAction {
 
   return {
     id: "pr",
-    label: "Create PR",
-    pendingLabel: "Creating PR...",
-    successLabel: "PR Created",
+    label: input.t.gitActions.createPR,
+    pendingLabel: input.t.gitActions.creatingPR,
+    successLabel: input.t.gitActions.prCreated,
     disabled: input.runtime.pr.disabled,
     status: input.runtime.pr.status,
     unavailableMessage: input.runtime.pr.disabled
@@ -256,75 +258,78 @@ function canMergeFromBase(input: BuildGitActionsInput): boolean {
 
 function getPullUnavailableMessage(input: BuildGitActionsInput): string | undefined {
   if (!input.hasRemote) {
-    return "Pull isn't available here because this branch is not connected to a remote yet";
+    return input.t.gitActions.pullUnavailableNoRemote;
   }
   if (input.hasUncommittedChanges) {
-    return "Pull isn't available while you have local changes so commit or stash them first";
+    return input.t.gitActions.pullUnavailableLocalChanges;
   }
   if (input.behindOfOrigin === 0) {
-    return "Pull isn't available because this branch is already up to date";
+    return input.t.gitActions.pullUnavailableUpToDate;
   }
   return undefined;
 }
 
 function getPushUnavailableMessage(input: BuildGitActionsInput): string | undefined {
   if (!input.hasRemote) {
-    return "Push isn't available here because this branch is not connected to a remote yet";
+    return input.t.gitActions.pushUnavailableNoRemote;
   }
   if (input.behindOfOrigin > 0) {
-    return "Push isn't available yet because there are newer changes to bring in first";
+    return input.t.gitActions.pushUnavailableBehind;
   }
   if (input.aheadOfOrigin === 0) {
-    return "Push isn't available because there is nothing new to send";
+    return input.t.gitActions.pushUnavailableNothingToSend;
   }
   return undefined;
 }
 
 function getPullAndPushUnavailableMessage(input: BuildGitActionsInput): string | undefined {
   if (!input.hasRemote) {
-    return "Pull and push isn't available here because this branch is not connected to a remote yet";
+    return input.t.gitActions.pullAndPushUnavailableNoRemote;
   }
   if (input.hasUncommittedChanges) {
-    return "Pull and push isn't available while you have local changes so commit or stash them first";
+    return input.t.gitActions.pullAndPushUnavailableLocalChanges;
   }
   if (input.behindOfOrigin === 0 && input.aheadOfOrigin === 0) {
-    return "Pull and push isn't available because this branch is already in sync";
+    return input.t.gitActions.pullAndPushUnavailableInSync;
   }
   return undefined;
 }
 
 function getCreatePrUnavailableMessage(input: BuildGitActionsInput): string | undefined {
   if (!input.githubFeaturesEnabled) {
-    return "Create PR isn't available right now because GitHub isn't connected";
+    return input.t.gitActions.createPRUnavailableNoGitHub;
   }
   if (input.aheadCount === 0) {
-    return "Create PR isn't available because this branch doesn't have any new commits yet";
+    return input.t.gitActions.createPRUnavailableNoCommits;
   }
   return undefined;
 }
 
 function getMergeBranchUnavailableMessage(input: BuildGitActionsInput): string | undefined {
   if (!input.baseRefAvailable) {
-    return "Merge isn't available because we couldn't determine the base branch";
+    return input.t.gitActions.mergeUnavailableNoBaseBranch;
   }
   if (input.hasUncommittedChanges) {
-    return "Merge isn't available while you have local changes so commit or stash them first";
+    return input.t.gitActions.mergeUnavailableLocalChanges;
   }
   if (input.aheadCount === 0) {
-    return "Merge isn't available because this branch doesn't have anything new to merge yet";
+    return input.t.gitActions.mergeUnavailableNothingToMerge;
   }
   return undefined;
 }
 
 function getMergeFromBaseUnavailableMessage(input: BuildGitActionsInput): string | undefined {
   if (!input.baseRefAvailable) {
-    return "Update isn't available because we couldn't determine the base branch";
+    return input.t.gitActions.updateUnavailableNoBaseBranch;
   }
   if (input.hasUncommittedChanges) {
-    return "Update isn't available while you have local changes so commit or stash them first";
+    return input.t.gitActions.updateUnavailableLocalChanges;
   }
   if (input.behindBaseCount === 0) {
-    return `Update isn't available because this branch is already up to date with ${input.baseRefLabel}`;
+    return input.t.gitActions.updateUnavailableUpToDate.replace(
+      "{baseRefLabel}",
+      input.baseRefLabel,
+    );
   }
   return undefined;
 }

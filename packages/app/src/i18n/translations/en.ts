@@ -650,10 +650,13 @@ export interface Translation {
     noOutput: string;
     loadingAgentTitle: string;
     workspace: string;
+    reviews: string;
     initialPromptRequired: string;
     noAvailableProviders: string;
     modelDefaultsLoading: string;
     noModelAvailable: string;
+    selectModel: string;
+    hostNotConnected: string;
     workspaceDirectoryNotFound: string;
     daemonClientNotAvailable: string;
     unableToCloseTerminal: string;
@@ -1052,6 +1055,13 @@ export const en: Translation = {
     leaveAComment: "Leave a comment",
     enterUrl: "Enter URL",
     other: "Other",
+    archive: "Archive",
+    restore: "Restore",
+    later: "Later",
+    stashAndSwitch: "Stash & Switch",
+    externalBrowser: "External browser",
+    pauseAndStop: "Pause and stop",
+    github: "GitHub",
   },
   status: {
     running: "Running",
@@ -1253,6 +1263,34 @@ export const en: Translation = {
     yesterday: "Yesterday",
     proposedPlan: "Proposed plan",
   },
+  agentGrouping: {
+    recent: "Recent",
+    yesterday: "Yesterday",
+    thisWeek: "This week",
+    thisMonth: "This month",
+    older: "Older",
+  },
+  prPane: {
+    draft: "Draft",
+    merged: "Merged",
+    closed: "Closed",
+    open: "Open",
+    commented: "Commented",
+    approved: "Approved",
+    reviewed: "Reviewed",
+  },
+  confirmDialog: {
+    confirm: "Confirm",
+    cancel: "Cancel",
+  },
+  desktopUpdates: {
+    whatsNew: "What's new",
+    retry: "Retry",
+    downloadAppleSiliconBuild: "Download the Apple Silicon build",
+    rosettaWarning: "You're running the Intel build of Paseo under Rosetta on Apple Silicon.",
+    rosettaWarningHint: "This causes high CPU usage. Download the Apple Silicon build to fix it.",
+    upgradeWarning: "Upgrading the app will stop running agents and close terminal sessions.",
+  },
   workspace: {
     size: "Size",
     modified: "Modified",
@@ -1314,10 +1352,13 @@ export const en: Translation = {
     noOutput: "No output",
     loadingAgentTitle: "Loading agent title",
     workspace: "Workspace",
+    reviews: "Reviews",
     initialPromptRequired: "Initial prompt is required",
     noAvailableProviders: "No available providers on the selected host",
     modelDefaultsLoading: "Model defaults are still loading",
     noModelAvailable: "No model is available for the selected provider",
+    selectModel: "Select a model",
+    hostNotConnected: "Host is not connected",
     workspaceDirectoryNotFound: "Workspace directory not found",
     daemonClientNotAvailable: "Daemon client not available",
     unableToCloseTerminal: "Unable to close terminal",
@@ -1400,6 +1441,11 @@ export const en: Translation = {
     closeOtherTabsLabel: "Close other tabs",
     reloadAgent: "Reload agent",
     reloadAgentTooltip: "Reload agent to update skills, MCPs or login status.",
+    creating: "Creating...",
+    hideFromSidebar: "Hide from sidebar",
+    removeProject: "Remove project",
+    openProjectSettings: "Open project settings",
+    projectActions: "Project actions",
   },
   shortcuts: {
     pressShortcut: "Press shortcut...",
@@ -1449,6 +1495,59 @@ export const en: Translation = {
     sendMessage: "Send message",
     queueMessage: "Queue message",
     muteUnmuteVoice: "Mute/unmute voice mode",
+  },
+  keyboardShortcutKeys: {
+    navigation: "Navigation",
+    projects: "Projects",
+    panels: "Panels",
+  },
+  commandCenter: {
+    settings: "Settings",
+  },
+  sidebarCallout: {
+    dismiss: "Dismiss",
+  },
+  menuHeader: {
+    toggleSidebar: "Toggle sidebar",
+  },
+  backHeader: {
+    back: "Back",
+  },
+  addHostModal: {
+    localhost: "localhost",
+    connectionUriPlaceholder: "tcp://localhost:6767?ssl=true",
+  },
+  pairLinkModal: {
+    pairLinkInput: "pair-link-input",
+    placeholder: "https://app.paseo.sh/#offer=...",
+  },
+  modelSelector: {
+    searchModels: "Search models...",
+    selectModel: "Select model",
+  },
+  providerModal: {
+    searchProviders: "Search providers",
+  },
+  gitDiffPane: {
+    diffMode: "Diff mode",
+  },
+  questionFormCard: {
+    dismissedByUser: "Dismissed by user",
+  },
+  agentStatusBar: {
+    unknown: "Unknown",
+  },
+  desktopPermissions: {
+    notAllowed: "Not allowed",
+    notFound: "Not found",
+  },
+  toast: {
+    copied: "Copied",
+    copiedWithLabel: "Copied {label}",
+    stashedChangesRestored: "Stashed changes restored",
+    failedToStashChanges: "Failed to stash changes",
+    failedToSwitchBranch: "Failed to switch branch",
+    failedToSelectImage: "Failed to select image",
   },
   integrations: {
     title: "Integrations",
@@ -1607,6 +1706,16 @@ export const en: Translation = {
   composer: {
     desktopPlaceholder: "Message the agent, tag @files, or use /commands and /skills",
     mobilePlaceholder: "Message, @files, /commands",
+    interrupt: "Interrupt",
+    voiceMode: "Voice mode",
+    attachIssueOrPR: "Attach issue or PR",
+    searchIssuesAndPRs: "Search issues and PRs...",
+    addIssueOrPR: "Add issue or PR",
+    queue: "Queue",
+    send: "Send",
+    dictation: "Dictation",
+    muteVoiceMode: "Mute Voice mode",
+    unmuteVoiceMode: "Unmute Voice mode",
   },
   daemon: {
     title: "Daemon",
@@ -1648,6 +1757,8 @@ export const en: Translation = {
     browserUrl: "Browser URL",
     openDevTools: "Open browser dev tools",
     failedToLoadPage: "Failed to load page",
+    stopLoading: "Stop loading",
+    refresh: "Refresh",
   },
   dictation: {
     startVoiceDictation: "Start voice dictation",
@@ -1667,6 +1778,9 @@ export const en: Translation = {
     copyMessage: "Copy message",
     openFile: "Open file",
     addAttachment: "Add attachment",
+    tasks: "Tasks",
+    plan: "Plan",
+    copyTurn: "Copy turn",
   },
   quittingOverlay: { quitting: "Quitting Paseo…", stoppingDaemon: "Stopping the local daemon." },
   realtimeVoice: {
@@ -1683,6 +1797,7 @@ export const en: Translation = {
     tab: "Tab",
     enter: "Enter",
     backspace: "Backspace",
+    terminal: "Terminal",
   },
   toolCallDetails: {
     error: "Error",
@@ -1710,6 +1825,12 @@ export const en: Translation = {
   agentStreamView: {
     startChattingWithAgent: "Start chatting with this agent...",
     scrollToBottom: "Scroll to bottom",
+    plan: "Plan",
+    permissionRequired: "Permission Required",
+    deny: "Deny",
+    implement: "Implement",
+    accept: "Accept",
+    howWouldYouLikeToProceed: "How would you like to proceed?",
   },
   gitActionsSplitButton: { moreOptions: "More options", moreActions: "More actions" },
   combinedModelSelector: {
@@ -1723,6 +1844,7 @@ export const en: Translation = {
     archivingAgent: "Archiving agent...",
     pleaseWaitWhileWeArchive: "Please wait while we archive this agent.",
     reconnectingTo: "Reconnecting to {serverLabel}...",
+    agent: "Agent",
   },
   filePanel: {
     loadingFile: "Loading file…",
@@ -1761,6 +1883,13 @@ export const en: Translation = {
     workspacePathNotAvailable: "Workspace path not available",
     failedToHideWorkspace: "Failed to hide workspace",
     failedToRemoveSomeWorkspaces: "Failed to remove some workspaces",
+    creating: "Creating...",
+    newWorkspace: "New workspace",
+    addProjectToGetStarted: "Add a project to get started",
+    archive: "Archive",
+    hide: "Hide",
+    remove: "Remove",
+    cancel: "Cancel",
   },
   desktopMenu: {
     edit: "Edit",

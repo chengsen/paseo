@@ -5,6 +5,7 @@ import { Check } from "lucide-react-native";
 import { Button } from "@/components/ui/button";
 import { settingsStyles } from "@/styles/settings";
 import type { DesktopPermissionStatus } from "@/desktop/permissions/desktop-permissions";
+import { useTranslation } from "@/i18n";
 
 export interface DesktopPermissionRowProps {
   title: string;
@@ -29,6 +30,7 @@ export function DesktopPermissionRow({
   isExtraActionDisabled = false,
   onExtraAction,
 }: DesktopPermissionRowProps) {
+  const { t } = useTranslation();
   const { theme } = useUnistyles();
   const state = status?.state ?? "unknown";
   const isGranted = state === "granted";
@@ -54,7 +56,7 @@ export function DesktopPermissionRow({
           <View style={styles.permissionGrantedActions}>
             <View style={styles.permissionStatusPill}>
               <Check size={theme.iconSize.sm} color={theme.colors.foregroundMuted} />
-              <Text style={styles.permissionStatusText}>Granted</Text>
+              <Text style={styles.permissionStatusText}>{t.permissions.granted}</Text>
             </View>
             {extraActionLabel && onExtraAction ? (
               <Button
@@ -69,7 +71,7 @@ export function DesktopPermissionRow({
           </View>
         ) : (
           <Button variant="outline" size="sm" onPress={onRequest} disabled={isRequesting}>
-            {isRequesting ? "Requesting..." : "Request"}
+            {isRequesting ? t.permissions.requesting : t.permissions.request}
           </Button>
         )}
         {shouldShowDetail ? (

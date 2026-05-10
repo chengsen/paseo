@@ -19,6 +19,7 @@ import { Shortcut } from "@/components/ui/shortcut";
 import { useShortcutKeys } from "@/hooks/use-shortcut-keys";
 import type { ShortcutKey } from "@/utils/format-shortcut";
 import { useToast } from "@/contexts/toast-context";
+import { useTranslation } from "@/i18n";
 import type { GitAction, GitActions } from "@/components/git-actions-policy";
 
 interface GitActionsSplitButtonProps {
@@ -74,6 +75,7 @@ function GitActionMenuItem({
 
 export function GitActionsSplitButton({ gitActions, hideLabels }: GitActionsSplitButtonProps) {
   const { theme } = useUnistyles();
+  const { t } = useTranslation();
   const toast = useToast();
   const archiveShortcutKeys = useShortcutKeys("archive-worktree");
 
@@ -152,7 +154,7 @@ export function GitActionsSplitButton({ gitActions, hideLabels }: GitActionsSpli
                 testID="changes-primary-cta-caret"
                 style={caretTriggerStyle}
                 accessibilityRole="button"
-                accessibilityLabel="More options"
+                accessibilityLabel={t.gitActionsSplitButton.moreOptions}
               >
                 <ChevronDown size={16} color={theme.colors.foregroundMuted} />
               </DropdownMenuTrigger>
@@ -184,7 +186,7 @@ export function GitActionsSplitButton({ gitActions, hideLabels }: GitActionsSpli
             hitSlop={8}
             style={overflowMenuButtonStyle}
             accessibilityRole="button"
-            accessibilityLabel="More actions"
+            accessibilityLabel={t.gitActionsSplitButton.moreActions}
           >
             <MoreVertical size={16} color={theme.colors.foregroundMuted} />
           </DropdownMenuTrigger>

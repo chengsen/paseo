@@ -31,12 +31,14 @@ const { modalMethods, modalProps, shouldExposeModalRef } = vi.hoisted(() => ({
 }));
 
 vi.mock("@gorhom/bottom-sheet", async () => {
-  const React = await import("react");
-  const MockBottomSheetModal = React.forwardRef(
-    (props: Record<string, unknown>, ref: React.ForwardedRef<unknown>) => {
+  const ReactMock = await import("react");
+  const MockBottomSheetModal = ReactMock.forwardRef<unknown, Record<string, unknown>>(
+    function MockBottomSheetModal(props, ref) {
       modalProps(props);
-      React.useImperativeHandle(ref, () => (shouldExposeModalRef.current ? modalMethods : null));
-      return React.createElement(
+      ReactMock.useImperativeHandle(ref, () =>
+        shouldExposeModalRef.current ? modalMethods : null,
+      );
+      return ReactMock.createElement(
         "div",
         { "data-testid": "bottom-sheet" },
         props.children as ReactNode,
@@ -47,15 +49,19 @@ vi.mock("@gorhom/bottom-sheet", async () => {
   return {
     BottomSheetModal: MockBottomSheetModal,
     BottomSheetModalProvider: ({ children }: { children: ReactNode }) =>
-      React.createElement("div", { "data-testid": "bottom-sheet-provider" }, children),
+      ReactMock.createElement("div", { "data-testid": "bottom-sheet-provider" }, children),
   };
 });
 
 vi.mock("@gorhom/portal", async () => {
-  const React = await import("react");
+  const ReactMock = await import("react");
   return {
     Portal: ({ children, hostName }: { children: ReactNode; hostName?: string }) =>
-      React.createElement("div", { "data-host": hostName, "data-testid": "app-portal" }, children),
+      ReactMock.createElement(
+        "div",
+        { "data-host": hostName, "data-testid": "app-portal" },
+        children,
+      ),
   };
 });
 

@@ -12,6 +12,7 @@ import {
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
 import { File, Folder } from "lucide-react-native";
 import type { Theme } from "@/styles/theme";
+import { useTranslation } from "@/i18n";
 import { getAutocompleteScrollOffset } from "./autocomplete-utils";
 
 export interface AutocompleteOption {
@@ -122,11 +123,14 @@ export function Autocomplete({
   onSelect,
   isLoading = false,
   errorMessage,
-  loadingText = "Loading...",
-  emptyText = "No results found",
+  loadingText,
+  emptyText,
   maxHeight = 220,
 }: AutocompleteProps) {
   const { theme } = useUnistyles();
+  const { t } = useTranslation();
+  const effectiveLoadingText = loadingText ?? t.common.loading;
+  const effectiveEmptyText = emptyText ?? t.autocomplete.noResultsFound;
   const scrollRef = useRef<ScrollView>(null);
   const rowLayoutsRef = useRef<Map<number, { top: number; height: number }>>(new Map());
   const viewportHeightRef = useRef(0);
@@ -212,7 +216,7 @@ export function Autocomplete({
     return (
       <View style={containerStyle}>
         <View style={styles.emptyItem}>
-          <Text style={styles.emptyText}>{loadingText}</Text>
+          <Text style={styles.emptyText}>{effectiveLoadingText}</Text>
         </View>
       </View>
     );
@@ -222,7 +226,9 @@ export function Autocomplete({
     return (
       <View style={containerStyle}>
         <View style={styles.emptyItem}>
-          <Text style={styles.emptyText}>Error: {errorMessage}</Text>
+          <Text style={styles.emptyText}>
+            {t.autocomplete.error.replace("{errorMessage}", errorMessage)}
+          </Text>
         </View>
       </View>
     );
@@ -232,7 +238,7 @@ export function Autocomplete({
     return (
       <View style={containerStyle}>
         <View style={styles.emptyItem}>
-          <Text style={styles.emptyText}>{emptyText}</Text>
+          <Text style={styles.emptyText}>{effectiveEmptyText}</Text>
         </View>
       </View>
     );

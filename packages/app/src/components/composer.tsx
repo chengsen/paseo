@@ -9,6 +9,8 @@ import {
 import { useState, useEffect, useRef, useCallback, useMemo, memo, type ReactElement } from "react";
 import { StyleSheet, withUnistyles } from "react-native-unistyles";
 import { useIsCompactFormFactor } from "@/constants/layout";
+import { useTranslation } from "@/i18n";
+import type { Translation } from "@/i18n/translations/en";
 import { useShallow } from "zustand/shallow";
 import {
   ArrowUp,
@@ -133,8 +135,8 @@ function resolveIsDesktopWebBreakpoint(isMobile: boolean): boolean {
   return isWeb && !isMobile;
 }
 
-function resolveMessagePlaceholder(isDesktopWebBreakpoint: boolean): string {
-  return isDesktopWebBreakpoint ? DESKTOP_MESSAGE_PLACEHOLDER : MOBILE_MESSAGE_PLACEHOLDER;
+function resolveMessagePlaceholder(isDesktopWebBreakpoint: boolean, t: Translation): string {
+  return isDesktopWebBreakpoint ? t.composer.desktopPlaceholder : t.composer.mobilePlaceholder;
 }
 
 function buildCancelButtonStyle(isConnected: boolean, isCancellingAgent: boolean): object[] {
@@ -656,8 +658,6 @@ interface ComposerProps {
 }
 
 const EMPTY_ARRAY: readonly QueuedMessage[] = [];
-const DESKTOP_MESSAGE_PLACEHOLDER = "Message the agent, tag @files, or use /commands and /skills";
-const MOBILE_MESSAGE_PLACEHOLDER = "Message, @files, /commands";
 const StableMessageInput = memo(MessageInput);
 
 function resolveContextWindowValues(
@@ -873,7 +873,8 @@ export function Composer({
 
   const isMobile = useIsCompactFormFactor();
   const isDesktopWebBreakpoint = resolveIsDesktopWebBreakpoint(isMobile);
-  const messagePlaceholder = resolveMessagePlaceholder(isDesktopWebBreakpoint);
+  const { t } = useTranslation();
+  const messagePlaceholder = resolveMessagePlaceholder(isDesktopWebBreakpoint, t);
   const userInput = value;
   const setUserInput = onChangeText;
   const {
@@ -1403,7 +1404,7 @@ export function Composer({
     () => [
       {
         id: "image",
-        label: "Add image",
+        label: t.message.addAttachment,
         icon: <ThemedPaperclip size={ICON_SIZE.md} uniProps={iconForegroundMutedMapping} />,
         onSelect: () => {
           void handlePickImage();
@@ -1418,7 +1419,7 @@ export function Composer({
         },
       },
     ],
-    [handlePickImage],
+    [handlePickImage, t.message.addAttachment],
   );
 
   const handleToggleGithubItem = useCallback(

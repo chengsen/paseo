@@ -17,6 +17,7 @@ import { resolveNewAgentWorkingDir } from "@/utils/new-agent-routing";
 import { openExternalUrl } from "@/utils/open-external-url";
 import { useToast } from "@/contexts/toast-context";
 import { navigateToWorkspace } from "@/hooks/use-workspace-navigation";
+import { useTranslation } from "@/i18n";
 
 export type { GitActionId, GitAction, GitActions } from "@/components/git-actions-policy";
 
@@ -31,18 +32,22 @@ function isActionDisabled(actionsDisabled: boolean, status: CheckoutGitActionSta
 function resolveBranchLabel(input: {
   currentBranch: string | null | undefined;
   notGit: boolean;
+  t: ReturnType<typeof useTranslation>["t"];
 }): string {
   if (input.currentBranch && input.currentBranch !== "HEAD") {
     return input.currentBranch;
   }
   if (input.notGit) {
-    return "Not a git repository";
+    return input.t.gitActions.notAGitRepository;
   }
-  return "Unknown";
+  return input.t.gitActions.unknown;
 }
 
-function formatBaseRefLabel(baseRef: string | undefined): string {
-  if (!baseRef) return "base";
+function formatBaseRefLabel(
+  baseRef: string | undefined,
+  t: ReturnType<typeof useTranslation>["t"],
+): string {
+  if (!baseRef) return t.gitActions.base;
   const trimmed = baseRef.replace(/^refs\/(heads|remotes)\//, "").trim();
   return trimmed.startsWith("origin/") ? trimmed.slice("origin/".length) : trimmed;
 }
@@ -225,6 +230,7 @@ interface UseGitActionsResult {
 }
 
 export function useGitActions({ serverId, cwd, icons }: UseGitActionsInput): UseGitActionsResult {
+  const { t } = useTranslation();
   const toast = useToast();
   const [postShipArchiveSuggested, setPostShipArchiveSuggested] = useState(false);
   const [shipDefault, setShipDefault] = useState<"merge" | "pr">("merge");
@@ -328,73 +334,73 @@ export function useGitActions({ serverId, cwd, icons }: UseGitActionsInput): Use
   const handleCommit = useCallback(() => {
     void runCommit({ serverId, cwd })
       .then(() => {
-        toastActionSuccess("Committed");
+        toastActionSuccess(t.gitActions.committed);
         return;
       })
       .catch((err) => {
-        toastActionError(err, "Failed to commit");
+        toastActionError(err, t.gitActions.failedToCommit);
       });
-  }, [cwd, runCommit, serverId, toastActionError, toastActionSuccess]);
+  }, [cwd, runCommit, serverId, t, toastActionError, toastActionSuccess]);
 
   const handlePull = useCallback(() => {
     void runPull({ serverId, cwd })
       .then(() => {
-        toastActionSuccess("Pulled");
+        toastActionSuccess(t.gitActions.pulled);
         return;
       })
       .catch((err) => {
-        toastActionError(err, "Failed to pull");
+        toastActionError(err, t.gitActions.failedToPull);
       });
-  }, [cwd, runPull, serverId, toastActionError, toastActionSuccess]);
+  }, [cwd, runPull, serverId, t, toastActionError, toastActionSuccess]);
 
   const handlePush = useCallback(() => {
     void runPush({ serverId, cwd })
       .then(() => {
-        toastActionSuccess("Pushed");
+        toastActionSuccess(t.gitActions.pushed);
         return;
       })
       .catch((err) => {
-        toastActionError(err, "Failed to push");
+        toastActionError(err, t.gitActions.failedToPush);
       });
-  }, [cwd, runPush, serverId, toastActionError, toastActionSuccess]);
+  }, [cwd, runPush, serverId, t, toastActionError, toastActionSuccess]);
 
   const handlePullAndPush = useCallback(() => {
     void runPullAndPush({ serverId, cwd })
       .then(() => {
-        toastActionSuccess("Pulled and pushed");
+        toastActionSuccess(t.gitActions.pulledAndPushed);
         return;
       })
       .catch((err) => {
-        toastActionError(err, "Failed to pull and push");
+        toastActionError(err, t.gitActions.failedToPullAndPush);
       });
-  }, [cwd, runPullAndPush, serverId, toastActionError, toastActionSuccess]);
+  }, [cwd, runPullAndPush, serverId, t, toastActionError, toastActionSuccess]);
 
   const handleCreatePr = useCallback(() => {
     void persistShipDefault("pr");
     void runCreatePr({ serverId, cwd })
       .then(() => {
-        toastActionSuccess("PR created");
+        toastActionSuccess(t.gitActions.prCreated);
         return;
       })
       .catch((err) => {
-        toastActionError(err, "Failed to create PR");
+        toastActionError(err, t.gitActions.failedToCreatePR);
       });
-  }, [cwd, persistShipDefault, runCreatePr, serverId, toastActionError, toastActionSuccess]);
+  }, [cwd, persistShipDefault, runCreatePr, serverId, t, toastActionError, toastActionSuccess]);
 
   const handleMergeBranch = useCallback(() => {
     if (!baseRef) {
-      toast.error("Base ref unavailable");
+      toast.error(t.gitActions.baseRefUnavailable);
       return;
     }
     void persistShipDefault("merge");
     void runMergeBranch({ serverId, cwd, baseRef })
       .then(() => {
         setPostShipArchiveSuggested(true);
-        toastActionSuccess("Merged");
+        toastActionSuccess(t.gitActions.merged);
         return;
       })
       .catch((err) => {
-        toastActionError(err, "Failed to merge");
+        toastActionError(err, t.gitActions.failedToMerge);
       });
   }, [
     baseRef,
@@ -402,6 +408,7 @@ export function useGitActions({ serverId, cwd, icons }: UseGitActionsInput): Use
     persistShipDefault,
     runMergeBranch,
     serverId,
+    t,
     toast,
     toastActionError,
     toastActionSuccess,
@@ -409,23 +416,23 @@ export function useGitActions({ serverId, cwd, icons }: UseGitActionsInput): Use
 
   const handleMergeFromBase = useCallback(() => {
     if (!baseRef) {
-      toast.error("Base ref unavailable");
+      toast.error(t.gitActions.baseRefUnavailable);
       return;
     }
     void runMergeFromBase({ serverId, cwd, baseRef })
       .then(() => {
-        toastActionSuccess("Updated");
+        toastActionSuccess(t.gitActions.updated);
         return;
       })
       .catch((err) => {
-        toastActionError(err, "Failed to merge from base");
+        toastActionError(err, t.gitActions.failedToMergeFromBase);
       });
-  }, [baseRef, cwd, runMergeFromBase, serverId, toast, toastActionError, toastActionSuccess]);
+  }, [baseRef, cwd, runMergeFromBase, serverId, t, toast, toastActionError, toastActionSuccess]);
 
   const handleArchiveWorktree = useCallback(() => {
     const worktreePath = status?.cwd;
     if (!worktreePath) {
-      toast.error("Worktree path unavailable");
+      toast.error(t.gitActions.worktreePathUnavailable);
       return;
     }
     const targetWorkingDir = resolveNewAgentWorkingDir(cwd, status ?? null);
@@ -435,11 +442,11 @@ export function useGitActions({ serverId, cwd, icons }: UseGitActionsInput): Use
         return;
       })
       .catch((err) => {
-        toastActionError(err, "Failed to archive worktree");
+        toastActionError(err, t.gitActions.failedToArchiveWorktree);
       });
-  }, [cwd, runArchiveWorktree, serverId, status, toast, toastActionError]);
+  }, [cwd, runArchiveWorktree, serverId, status, t, toast, toastActionError]);
 
-  const baseRefLabel = useMemo(() => formatBaseRefLabel(baseRef), [baseRef]);
+  const baseRefLabel = useMemo(() => formatBaseRefLabel(baseRef, t), [baseRef, t]);
   const derived = deriveGitActionsState({
     isGit,
     status,
@@ -475,6 +482,7 @@ export function useGitActions({ serverId, cwd, icons }: UseGitActionsInput): Use
   const branchLabel = resolveBranchLabel({
     currentBranch: gitStatus?.currentBranch,
     notGit,
+    t,
   });
 
   const handlePrAction = useCallback(() => {
@@ -504,6 +512,7 @@ export function useGitActions({ serverId, cwd, icons }: UseGitActionsInput): Use
       behindOfOrigin,
       shouldPromoteArchive,
       shipDefault,
+      t,
       runtime: {
         commit: {
           disabled: commitDisabled,
@@ -569,6 +578,7 @@ export function useGitActions({ serverId, cwd, icons }: UseGitActionsInput): Use
     aheadOfOrigin,
     behindOfOrigin,
     shipDefault,
+    t,
     baseRefLabel,
     shouldPromoteArchive,
     commitDisabled,

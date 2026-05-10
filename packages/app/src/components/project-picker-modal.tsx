@@ -19,6 +19,7 @@ import { useOpenProject } from "@/hooks/use-open-project";
 import { buildWorkingDirectorySuggestions } from "@/utils/working-directory-suggestions";
 import { isNative } from "@/constants/platform";
 import { useActiveServerId } from "@/hooks/use-active-server-id";
+import { useTranslation } from "@/i18n";
 
 interface PathRowProps {
   path: string;
@@ -60,6 +61,7 @@ function PathRow({ path, active, onSelect }: PathRowProps) {
 
 export function ProjectPickerModal() {
   const { theme } = useUnistyles();
+  const { t } = useTranslation();
   const serverId = useActiveServerId();
 
   const open = useKeyboardShortcutsStore((s) => s.projectPickerOpen);
@@ -232,7 +234,7 @@ export function ProjectPickerModal() {
               ref={inputRef}
               value={query}
               onChangeText={handleChangeQuery}
-              placeholder="Type a directory path..."
+              placeholder={t.workspace.typeDirectoryPath}
               placeholderTextColor={theme.colors.foregroundMuted}
               style={inputStyle}
               autoCapitalize="none"
@@ -248,9 +250,9 @@ export function ProjectPickerModal() {
             keyboardShouldPersistTaps="always"
             showsVerticalScrollIndicator={false}
           >
-            {isSubmitting ? <Text style={emptyTextStyle}>Opening project...</Text> : null}
+            {isSubmitting ? <Text style={emptyTextStyle}>{t.workspace.openingProject}</Text> : null}
             {!isSubmitting && options.length === 0 && !query.trim() ? (
-              <Text style={emptyTextStyle}>Start typing a path</Text>
+              <Text style={emptyTextStyle}>{t.workspace.startTypingPath}</Text>
             ) : null}
             {!isSubmitting && !(options.length === 0 && !query.trim()) ? (
               <>

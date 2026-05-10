@@ -8,12 +8,14 @@ import {
   type PickedImageAttachmentInput,
 } from "@/hooks/image-attachment-picker";
 import { isWeb } from "@/constants/platform";
+import { useTranslation } from "@/i18n";
 
 interface UseImageAttachmentPickerResult {
   pickImages: () => Promise<PickedImageAttachmentInput[] | null>;
 }
 
 export function useImageAttachmentPicker(): UseImageAttachmentPickerResult {
+  const { t } = useTranslation();
   const [mediaPermission, requestMediaPermission] = ImagePicker.useMediaLibraryPermissions();
   const isPickingRef = useRef(false);
 
@@ -83,12 +85,12 @@ export function useImageAttachmentPicker(): UseImageAttachmentPickerResult {
       return await normalizePickedImageAssets(result.assets);
     } catch (error) {
       console.error("[ImageAttachmentPicker] Failed to pick image:", error);
-      Alert.alert("Error", "Failed to select image");
+      Alert.alert(t.common.error, t.toast.failedToSelectImage);
       return null;
     } finally {
       isPickingRef.current = false;
     }
-  }, [ensurePermission]);
+  }, [ensurePermission, t.common.error, t.toast.failedToSelectImage]);
 
   return { pickImages };
 }

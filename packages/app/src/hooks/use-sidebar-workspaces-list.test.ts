@@ -7,10 +7,6 @@ import { createRoot, type Root } from "react-dom/client";
 import React from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-vi.hoisted(() => {
-  (globalThis as unknown as { __DEV__: boolean }).__DEV__ = false;
-});
-
 import {
   appendMissingOrderKeys,
   applyStoredOrdering,
@@ -21,6 +17,10 @@ import type { WorkspaceStructureProject } from "@/stores/session-store-hooks";
 import { getHostRuntimeStore } from "@/runtime/host-runtime";
 import { useSessionStore, type WorkspaceDescriptor } from "@/stores/session-store";
 import { useSidebarOrderStore } from "@/stores/sidebar-order-store";
+
+vi.hoisted(() => {
+  (globalThis as unknown as { __DEV__: boolean }).__DEV__ = false;
+});
 
 interface OrderedItem {
   key: string;

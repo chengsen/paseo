@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
+import { resolveToolCallIcon } from "./tool-call-icon";
+
 const iconMocks = vi.hoisted(() => ({
   Bot: () => null,
   Brain: () => null,
@@ -13,8 +15,6 @@ const iconMocks = vi.hoisted(() => ({
 }));
 
 vi.mock("lucide-react-native", () => iconMocks);
-
-import { resolveToolCallIcon } from "./tool-call-icon";
 
 describe("tool-call-icon", () => {
   it("uses robot icon for task sub-agent details", () => {

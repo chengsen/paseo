@@ -1,5 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import {
+  buildWorkspaceTabPersistenceKey,
+  useWorkspaceTabsStore,
+} from "@/stores/workspace-tabs-store";
+
 vi.mock("@react-native-async-storage/async-storage", () => {
   const storage = new Map<string, string>();
   return {
@@ -14,11 +19,6 @@ vi.mock("@react-native-async-storage/async-storage", () => {
     },
   };
 });
-
-import {
-  buildWorkspaceTabPersistenceKey,
-  useWorkspaceTabsStore,
-} from "@/stores/workspace-tabs-store";
 
 const SERVER_ID = "server-1";
 const WORKSPACE_ID = "/repo/worktree";

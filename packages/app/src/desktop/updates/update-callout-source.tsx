@@ -1,5 +1,5 @@
 import { Gift } from "lucide-react-native";
-import { type ReactNode, useEffect, useRef } from "react";
+import { type ReactNode, useCallback, useEffect, useRef } from "react";
 import { useUnistyles } from "react-native-unistyles";
 import {
   type SidebarCalloutAction,
@@ -9,6 +9,7 @@ import { useSidebarCallouts } from "@/contexts/sidebar-callout-context";
 import { useDesktopAppUpdater } from "@/desktop/updates/use-desktop-app-updater";
 import { useStableEvent } from "@/hooks/use-stable-event";
 import { openExternalUrl } from "@/utils/open-external-url";
+import { useTranslation } from "@/i18n";
 
 const CHECK_INTERVAL_MS = 30 * 60 * 1000;
 const CHANGELOG_URL = "https://paseo.sh/changelog";
@@ -42,26 +43,34 @@ function resolveUpdateCalloutDescription(args: {
   return <UpdateAvailableDescription />;
 }
 
-function buildUpdateCalloutActions(args: {
-  isInstalled: boolean;
-  isInstalling: boolean;
-  isError: boolean;
-  openChangelog: () => void;
-  retry: () => void;
-  install: () => void;
-}): SidebarCalloutAction[] {
-  const actions: SidebarCalloutAction[] = [{ label: "What's new", onPress: args.openChangelog }];
-  if (args.isError) {
-    actions.push({ label: "Retry", onPress: args.retry, variant: "primary" });
-  } else if (!args.isInstalled) {
-    actions.push({
-      label: args.isInstalling ? "Installing..." : "Install & restart",
-      onPress: args.install,
-      variant: "primary",
-      disabled: args.isInstalling,
-    });
-  }
-  return actions;
+function useBuildUpdateCalloutActions() {
+  const { t } = useTranslation();
+  return useCallback(
+    (args: {
+      isInstalled: boolean;
+      isInstalling: boolean;
+      isError: boolean;
+      openChangelog: () => void;
+      retry: () => void;
+      install: () => void;
+    }): SidebarCalloutAction[] => {
+      const actions: SidebarCalloutAction[] = [
+        { label: t.desktopUpdates.whatsNew, onPress: args.openChangelog },
+      ];
+      if (args.isError) {
+        actions.push({ label: t.common.retry, onPress: args.retry, variant: "primary" });
+      } else if (!args.isInstalled) {
+        actions.push({
+          label: args.isInstalling ? "Installing..." : "Install & restart",
+          onPress: args.install,
+          variant: "primary",
+          disabled: args.isInstalling,
+        });
+      }
+      return actions;
+    },
+    [t],
+  );
 }
 
 export function UpdateCalloutSource() {
@@ -76,6 +85,7 @@ export function UpdateCalloutSource() {
     installUpdate,
     isInstalling,
   } = useDesktopAppUpdater();
+  const buildUpdateCalloutActions = useBuildUpdateCalloutActions();
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const openChangelog = useStableEvent(() => {
@@ -162,6 +172,7 @@ export function UpdateCalloutSource() {
     status,
     theme.colors.foregroundMuted,
     theme.iconSize.sm,
+    buildUpdateCalloutActions,
   ]);
 
   return null;

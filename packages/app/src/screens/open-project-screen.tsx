@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "@/i18n";
 import { View, Text } from "react-native";
 import { StyleSheet } from "react-native-unistyles";
 import { FolderOpen, Smartphone } from "lucide-react-native";
@@ -20,6 +21,7 @@ import { useIsLocalDaemon } from "@/hooks/use-is-local-daemon";
 import { PairDeviceModal } from "@/desktop/components/pair-device-modal";
 
 export function OpenProjectScreen({ serverId }: { serverId: string }) {
+  const { t } = useTranslation();
   const openDesktopAgentList = usePanelStore((s) => s.openDesktopAgentList);
   const openProjectPicker = useOpenProjectPicker(serverId);
   const hasHydrated = useSessionStore((s) => s.sessions[serverId]?.hasHydratedWorkspaces ?? false);
@@ -51,11 +53,9 @@ export function OpenProjectScreen({ serverId }: { serverId: string }) {
           <PaseoLogo size={56} />
         </View>
         <View style={styles.headingGroup}>
-          <Text style={styles.heading}>What shall we build today?</Text>
+          <Text style={styles.heading}>{t.projects.whatShallWeBuild}</Text>
           {hasHydrated && !hasProjects ? (
-            <Text style={styles.subtitle}>
-              Add a project folder to start running agents on your codebase
-            </Text>
+            <Text style={styles.subtitle}>{t.projects.addProjectHint}</Text>
           ) : null}
         </View>
         <View style={styles.cta}>
@@ -65,7 +65,7 @@ export function OpenProjectScreen({ serverId }: { serverId: string }) {
             onPress={handleOpenPicker}
             testID="open-project-submit"
           >
-            Add a project
+            {t.projects.addProject}
           </Button>
           {isLocalDaemon ? (
             <Button
@@ -74,7 +74,7 @@ export function OpenProjectScreen({ serverId }: { serverId: string }) {
               onPress={handleOpenPairDevice}
               testID="open-project-pair-device"
             >
-              Pair device
+              {t.projects.pairDevice}
             </Button>
           ) : null}
         </View>

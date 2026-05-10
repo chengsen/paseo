@@ -1,5 +1,6 @@
 import { AdaptiveModalSheet } from "@/components/adaptive-modal-sheet";
 import { PairDeviceSection } from "@/desktop/components/pair-device-section";
+import { useTranslation } from "@/i18n";
 
 export interface PairDeviceModalProps {
   visible: boolean;
@@ -10,9 +11,10 @@ export interface PairDeviceModalProps {
 const SNAP_POINTS: string[] = ["82%", "94%"];
 
 export function PairDeviceModal({ visible, onClose, testID }: PairDeviceModalProps) {
+  const { t } = useTranslation();
   return (
     <AdaptiveModalSheet
-      title="Pair a device"
+      title={t.host.pairADevice}
       visible={visible}
       onClose={onClose}
       snapPoints={SNAP_POINTS}

@@ -4,6 +4,7 @@ import Markdown, { type ASTNode } from "react-native-markdown-display";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
 import { createMarkdownStyles } from "@/styles/markdown-styles";
 import { getMarkdownListMarker } from "@/utils/markdown-list";
+import { useTranslation } from "@/i18n";
 
 type MarkdownRuleStyles = Record<string, TextStyle & ViewStyle & { [key: string]: unknown }>;
 
@@ -194,7 +195,7 @@ function createPlanMarkdownRules() {
 }
 
 export function PlanCard({
-  title = "Plan",
+  title: titleProp,
   description,
   text,
   footer,
@@ -208,6 +209,8 @@ export function PlanCard({
   disableOuterSpacing?: boolean;
   testID?: string;
 }) {
+  const { t } = useTranslation();
+  const title = titleProp ?? t.message.plan;
   const { theme } = useUnistyles();
   const markdownStyles = createMarkdownStyles(theme);
   const markdownRules = createPlanMarkdownRules();

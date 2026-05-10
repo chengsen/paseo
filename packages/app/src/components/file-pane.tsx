@@ -31,6 +31,7 @@ import { useAttachmentPreviewUrl } from "@/attachments/use-attachment-preview-ur
 import { persistAttachmentFromBytes } from "@/attachments/service";
 import { createPreviewAttachmentId, getFileNameFromPath } from "@/attachments/utils";
 import { explorerFileFromReadResult } from "@/file-explorer/read-result";
+import { useTranslation } from "@/i18n";
 
 interface CodeLineProps {
   tokens: HighlightToken[];
@@ -177,6 +178,7 @@ function FilePreviewBody({
   filePath,
   imagePreviewUri,
 }: FilePreviewBodyProps) {
+  const { t } = useTranslation();
   const { theme } = useUnistyles();
   const isDark = theme.colorScheme === "dark";
   const colorMap = isDark ? darkHighlightColors : lightHighlightColors;
@@ -213,7 +215,7 @@ function FilePreviewBody({
     return (
       <View style={styles.centerState}>
         <ActivityIndicator size="small" />
-        <Text style={styles.loadingText}>Loading file…</Text>
+        <Text style={styles.loadingText}>{t.filePanel.loadingFile}</Text>
       </View>
     );
   }
@@ -221,7 +223,7 @@ function FilePreviewBody({
   if (!preview) {
     return (
       <View style={styles.centerState}>
-        <Text style={styles.emptyText}>No preview available</Text>
+        <Text style={styles.emptyText}>{t.filePanel.noPreviewAvailable}</Text>
       </View>
     );
   }
@@ -305,7 +307,7 @@ function FilePreviewBody({
       return (
         <View style={styles.centerState}>
           <ActivityIndicator size="small" />
-          <Text style={styles.loadingText}>Loading file…</Text>
+          <Text style={styles.loadingText}>{t.filePanel.loadingFile}</Text>
         </View>
       );
     }
@@ -335,7 +337,7 @@ function FilePreviewBody({
 
   return (
     <View style={styles.centerState}>
-      <Text style={styles.emptyText}>Binary preview unavailable</Text>
+      <Text style={styles.emptyText}>{t.filePanel.binaryPreviewUnavailable}</Text>
       <Text style={styles.binaryMetaText}>{formatFileSize({ size: preview.size })}</Text>
     </View>
   );

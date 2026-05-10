@@ -1,5 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import {
+  __desktopPreviewUrlTestUtils,
+  releaseDesktopPreviewUrl,
+  resolveDesktopPreviewUrl,
+} from "./desktop-preview-url";
+
 const { invokeDesktopCommandMock } = vi.hoisted(() => ({
   invokeDesktopCommandMock: vi.fn(async () => "AAECAw=="),
 }));
@@ -7,12 +13,6 @@ const { invokeDesktopCommandMock } = vi.hoisted(() => ({
 vi.mock("@/desktop/electron/invoke", () => ({
   invokeDesktopCommand: invokeDesktopCommandMock,
 }));
-
-import {
-  __desktopPreviewUrlTestUtils,
-  releaseDesktopPreviewUrl,
-  resolveDesktopPreviewUrl,
-} from "./desktop-preview-url";
 
 describe("desktop preview URLs", () => {
   const createObjectURL = vi.fn(() => "blob:desktop-preview-1");

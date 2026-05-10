@@ -13,6 +13,8 @@ import {
 import { DaemonConnectionTestError, connectToDaemon } from "@/utils/test-daemon-connection";
 import { AdaptiveModalSheet, AdaptiveTextInput } from "./adaptive-modal-sheet";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/i18n";
+import type { Translation } from "@/i18n/translations/en";
 
 const FLEX_ONE_STYLE = { flex: 1 } as const;
 
@@ -127,14 +129,14 @@ function isIpv6Host(host: string): boolean {
   return host.includes(":") && !host.startsWith("[") && !host.endsWith("]");
 }
 
-function buildConnectionUriFromDraft(draft: DirectConnectionDraft): string {
+function buildConnectionUriFromDraft(draft: DirectConnectionDraft, t: Translation): string {
   const host = draft.host.trim();
   const port = Number(draft.port.trim());
   if (!host) {
-    throw new Error("Host is required");
+    throw new Error(t.host.hostRequired);
   }
   if (!Number.isInteger(port) || port < 1 || port > 65535) {
-    throw new Error("Port must be between 1 and 65535");
+    throw new Error(t.host.portRange);
   }
 
   return serializeConnectionUriForStorage({
@@ -146,8 +148,11 @@ function buildConnectionUriFromDraft(draft: DirectConnectionDraft): string {
   });
 }
 
-function prepareDirectConnection(draft: DirectConnectionDraft): PreparedDirectConnection {
-  const parsed = parseConnectionUri(buildConnectionUriFromDraft(draft));
+function prepareDirectConnection(
+  draft: DirectConnectionDraft,
+  t: Translation,
+): PreparedDirectConnection {
+  const parsed = parseConnectionUri(buildConnectionUriFromDraft(draft, t));
   const endpoint = parsed.isIpv6
     ? `[${parsed.host}]:${parsed.port}`
     : `${parsed.host}:${parsed.port}`;
@@ -177,7 +182,10 @@ function normalizeTransportMessage(message: string | null | undefined): string |
   return trimmed;
 }
 
-function formatTechnicalTransportDetails(details: (string | null)[]): string | null {
+function formatTechnicalTransportDetails(
+  details: (string | null)[],
+  t: Translation,
+): string | null {
   const unique = Array.from(
     new Set(
       details
@@ -196,7 +204,7 @@ function formatTechnicalTransportDetails(details: (string | null)[]): string | n
   });
 
   if (allGeneric) {
-    return `${unique[0]} (no additional details provided)`;
+    return `${unique[0]} (${t.host.noAdditionalDetails})`;
   }
 
   return unique.join(" — ");
@@ -205,13 +213,14 @@ function formatTechnicalTransportDetails(details: (string | null)[]): string | n
 function buildConnectionFailureCopy(
   endpoint: string,
   error: unknown,
+  t: Translation,
 ): { title: string; detail: string | null; raw: string | null } {
-  const title = `We failed to connect to ${endpoint}.`;
+  const title = t.host.connectionFailedTitle.replace("{endpoint}", endpoint);
 
   const raw = (() => {
     if (error instanceof DaemonConnectionTestError) {
       return (
-        formatTechnicalTransportDetails([error.reason, error.lastError]) ??
+        formatTechnicalTransportDetails([error.reason, error.lastError], t) ??
         normalizeTransportMessage(error.message)
       );
     }
@@ -224,29 +233,30 @@ function buildConnectionFailureCopy(
   const rawLower = raw?.toLowerCase() ?? "";
   let detail: string | null = null;
 
-  if (raw === "Incorrect password" || raw === "Password required") {
-    detail = raw;
+  if (raw === "Incorrect password") {
+    detail = t.host.incorrectPassword;
+  } else if (raw === "Password required") {
+    detail = t.host.passwordRequired;
   } else if (rawLower.includes("timed out")) {
-    detail = "Connection timed out. Check the host/port and your network.";
+    detail = t.host.connectionTimedOut;
   } else if (
     rawLower.includes("econnrefused") ||
     rawLower.includes("connection refused") ||
     rawLower.includes("err_connection_refused")
   ) {
-    detail = "Connection refused. Is the server running at this address?";
+    detail = t.host.connectionRefused;
   } else if (rawLower.includes("enotfound") || rawLower.includes("not found")) {
-    detail = "Host not found. Check the hostname and try again.";
+    detail = t.host.hostNotFound;
   } else if (rawLower.includes("ehostunreach") || rawLower.includes("host is unreachable")) {
-    detail = "Host is unreachable. Check your network and firewall.";
+    detail = t.host.hostUnreachable;
   } else if (
     rawLower.includes("certificate") ||
     rawLower.includes("tls") ||
     rawLower.includes("ssl")
   ) {
-    detail =
-      "TLS error. Direct connections use SSL only when a TLS terminator is in front of the daemon.";
+    detail = t.host.tlsError;
   } else {
-    detail = "Unable to connect. Check the host/port and that the daemon is reachable.";
+    detail = t.host.unableToConnect;
   }
 
   return { title, detail, raw };
@@ -266,6 +276,7 @@ export interface AddHostModalProps {
 
 export function AddHostModal({ visible, onClose, onCancel, onSaved }: AddHostModalProps) {
   const { theme } = useUnistyles();
+  const { t } = useTranslation();
   const daemons = useHosts();
   const { upsertDirectConnection } = useHostMutations();
   const isMobile = useIsCompactFormFactor();
@@ -325,9 +336,9 @@ export function AddHostModal({ visible, onClose, onCancel, onSaved }: AddHostMod
 
     let connection: PreparedDirectConnection;
     try {
-      connection = prepareDirectConnection({ host, port, useTls, password });
+      connection = prepareDirectConnection({ host, port, useTls, password }, t);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Invalid connection";
+      const message = error instanceof Error ? error.message : t.host.invalidConnection;
       setErrorMessage(message);
       return;
     }
@@ -356,7 +367,11 @@ export function AddHostModal({ visible, onClose, onCancel, onSaved }: AddHostMod
       onSaved?.({ profile, serverId, hostname, isNewHost });
       handleClose();
     } catch (error) {
-      const { title, detail, raw: rawDetail } = buildConnectionFailureCopy(connection.uri, error);
+      const {
+        title,
+        detail,
+        raw: rawDetail,
+      } = buildConnectionFailureCopy(connection.uri, error, t);
       let combined: string;
       if (rawDetail && detail && rawDetail !== detail) {
         combined = `${title}\n${detail}\nDetails: ${rawDetail}`;
@@ -367,7 +382,7 @@ export function AddHostModal({ visible, onClose, onCancel, onSaved }: AddHostMod
       }
       setErrorMessage(combined);
       if (!isMobile) {
-        Alert.alert("Connection failed", combined);
+        Alert.alert(t.host.connectionFailedAlert, combined);
       }
     } finally {
       setIsSaving(false);
@@ -381,6 +396,7 @@ export function AddHostModal({ visible, onClose, onCancel, onSaved }: AddHostMod
     onSaved,
     password,
     port,
+    t,
     upsertDirectConnection,
     useTls,
   ]);
@@ -405,7 +421,7 @@ export function AddHostModal({ visible, onClose, onCancel, onSaved }: AddHostMod
   const handleToggleAdvanced = useCallback(() => {
     if (!isAdvancedOpen) {
       try {
-        setAdvancedUri(buildConnectionUriFromDraft({ host, port, useTls, password }));
+        setAdvancedUri(buildConnectionUriFromDraft({ host, port, useTls, password }, t));
       } catch {
         setAdvancedUri("");
       }
@@ -425,27 +441,27 @@ export function AddHostModal({ visible, onClose, onCancel, onSaved }: AddHostMod
       setErrorMessage("");
     }
     setIsAdvancedOpen(false);
-  }, [advancedUri, host, isAdvancedOpen, password, port, useTls]);
+  }, [advancedUri, host, isAdvancedOpen, password, port, t, useTls]);
 
   const AdvancedIcon = isAdvancedOpen ? ChevronDown : ChevronRight;
   const PasswordIcon = isPasswordVisible ? EyeOff : Eye;
 
   return (
     <AdaptiveModalSheet
-      title="Direct connection"
+      title={t.modal.directConnection}
       visible={visible}
       onClose={handleClose}
       testID="add-host-modal"
     >
-      <Text style={styles.helper}>Enter the address of a Paseo server.</Text>
+      <Text style={styles.helper}>{t.host.enterAddress}</Text>
 
       <View style={styles.portRow}>
         <View style={hostFieldStyle}>
-          <Text style={styles.label}>Host</Text>
+          <Text style={styles.label}>{t.host.hostLabel}</Text>
           <AdaptiveTextInput
             testID="direct-host-input"
             nativeID="direct-host-input"
-            accessibilityLabel="Host"
+            accessibilityLabel={t.host.hostLabel}
             value={host}
             onChangeText={setHost}
             placeholder="localhost"
@@ -459,11 +475,11 @@ export function AddHostModal({ visible, onClose, onCancel, onSaved }: AddHostMod
           />
         </View>
         <View style={portFieldStyle}>
-          <Text style={styles.label}>Port</Text>
+          <Text style={styles.label}>{t.host.portLabel}</Text>
           <AdaptiveTextInput
             testID="direct-port-input"
             nativeID="direct-port-input"
-            accessibilityLabel="Port"
+            accessibilityLabel={t.host.portLabel}
             value={port}
             onChangeText={setPort}
             placeholder="6767"
@@ -484,7 +500,7 @@ export function AddHostModal({ visible, onClose, onCancel, onSaved }: AddHostMod
         onPress={handleToggleUseTls}
         disabled={isSaving}
         accessibilityRole="checkbox"
-        accessibilityLabel="Use SSL"
+        accessibilityLabel={t.host.useSsl}
         accessibilityState={useTlsAccessibilityState}
         testID="direct-ssl-toggle"
       >
@@ -495,19 +511,19 @@ export function AddHostModal({ visible, onClose, onCancel, onSaved }: AddHostMod
             </View>
           ) : null}
         </View>
-        <Text style={styles.label}>Use SSL</Text>
+        <Text style={styles.label}>{t.host.useSsl}</Text>
       </Pressable>
 
       <View style={styles.field}>
-        <Text style={styles.label}>Password</Text>
+        <Text style={styles.label}>{t.host.password}</Text>
         <View style={styles.passwordRow}>
           <AdaptiveTextInput
             testID="direct-password-input"
             nativeID="direct-password-input"
-            accessibilityLabel="Password"
+            accessibilityLabel={t.host.password}
             value={password}
             onChangeText={setPassword}
-            placeholder="Optional"
+            placeholder={t.host.optional}
             placeholderTextColor={theme.colors.foregroundMuted}
             style={passwordInputStyle}
             autoCapitalize="none"
@@ -522,7 +538,7 @@ export function AddHostModal({ visible, onClose, onCancel, onSaved }: AddHostMod
             onPress={handleTogglePasswordVisibility}
             disabled={isSaving}
             accessibilityRole="button"
-            accessibilityLabel={isPasswordVisible ? "Hide password" : "Show password"}
+            accessibilityLabel={isPasswordVisible ? t.host.hidePassword : t.host.showPassword}
             testID="direct-password-visibility-toggle"
           >
             <PasswordIcon size={18} color={theme.colors.foregroundMuted} />
@@ -536,17 +552,17 @@ export function AddHostModal({ visible, onClose, onCancel, onSaved }: AddHostMod
           onPress={handleToggleAdvanced}
           disabled={isSaving}
           accessibilityRole="button"
-          accessibilityLabel={isAdvancedOpen ? "Hide advanced" : "Show advanced"}
+          accessibilityLabel={isAdvancedOpen ? t.host.hideAdvanced : t.host.showAdvanced}
           testID="direct-host-advanced-toggle"
         >
           <AdvancedIcon size={16} color={theme.colors.foregroundMuted} />
-          <Text style={styles.advancedText}>Advanced</Text>
+          <Text style={styles.advancedText}>{t.host.advanced}</Text>
         </Pressable>
         {isAdvancedOpen ? (
           <AdaptiveTextInput
             testID="direct-host-uri-input"
             nativeID="direct-host-uri-input"
-            accessibilityLabel="Connection URI"
+            accessibilityLabel={t.host.connectionUri}
             value={advancedUri}
             onChangeText={setAdvancedUri}
             placeholder="tcp://localhost:6767?ssl=true"
@@ -570,7 +586,7 @@ export function AddHostModal({ visible, onClose, onCancel, onSaved }: AddHostMod
           onPress={handleCancel}
           disabled={isSaving}
         >
-          Cancel
+          {t.common.cancel}
         </Button>
         <Button
           style={FLEX_ONE_STYLE}
@@ -580,7 +596,7 @@ export function AddHostModal({ visible, onClose, onCancel, onSaved }: AddHostMod
           leftIcon={connectIcon}
           testID="direct-host-submit"
         >
-          {isSaving ? "Connecting..." : "Connect"}
+          {isSaving ? t.host.connecting : t.common.connect}
         </Button>
       </View>
     </AdaptiveModalSheet>

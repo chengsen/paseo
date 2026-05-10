@@ -11,6 +11,7 @@ import { queryClient } from "@/query/query-client";
 import { usePanelStore } from "@/stores/panel-store";
 import { useSessionStore } from "@/stores/session-store";
 import { useWorkspaceExecutionAuthority } from "@/stores/session-store-hooks";
+import { useTranslation } from "@/i18n";
 
 type ListTerminalsPayload = ListTerminalsResponse["payload"];
 
@@ -34,6 +35,7 @@ function useTerminalPanelDescriptor(
   target: { kind: "terminal"; terminalId: string },
   context: { serverId: string; workspaceId: string },
 ): PanelDescriptor {
+  const { t } = useTranslation();
   const client = useSessionStore((state) => state.sessions[context.serverId]?.client ?? null);
   const workspaceAuthority = useWorkspaceExecutionAuthority(context.serverId, context.workspaceId)!;
   const workspaceDirectory = workspaceAuthority.ok
@@ -61,8 +63,8 @@ function useTerminalPanelDescriptor(
     terminalsQuery.data?.terminals.find((entry) => entry.id === target.terminalId) ?? null;
 
   return {
-    label: trimNonEmpty(terminal?.title ?? terminal?.name ?? null) ?? "Terminal",
-    subtitle: "Terminal",
+    label: trimNonEmpty(terminal?.title ?? terminal?.name ?? null) ?? t.terminalPane.terminal,
+    subtitle: t.terminalPane.terminal,
     titleState: "ready",
     icon: Terminal,
     statusBucket: null,

@@ -9,12 +9,14 @@ import { Button } from "@/components/ui/button";
 import { openExternalUrl } from "@/utils/open-external-url";
 import { shouldUseDesktopDaemon } from "@/desktop/daemon/desktop-daemon";
 import { useCliInstall, useSkillsInstall } from "@/desktop/hooks/use-install-status";
+import { useTranslation } from "@/i18n";
 
 const CLI_DOCS_URL = "https://paseo.sh/docs/cli";
 const SKILLS_DOCS_URL = "https://paseo.sh/docs/skills";
 const ROW_WITH_BORDER_STYLE = [settingsStyles.row, settingsStyles.rowBorder];
 
 export function IntegrationsSection() {
+  const { t } = useTranslation();
   const { theme } = useUnistyles();
   const showSection = shouldUseDesktopDaemon();
   const {
@@ -72,9 +74,9 @@ export function IntegrationsSection() {
           textStyle={settingsStyles.sectionHeaderLinkText}
           style={settingsStyles.sectionHeaderLink}
           onPress={handleOpenCliDocs}
-          accessibilityLabel="Open CLI documentation"
+          accessibilityLabel={t.integrations.cliDocs}
         >
-          CLI docs
+          {t.integrations.cliDocs}
         </Button>
         <Button
           variant="ghost"
@@ -83,13 +85,13 @@ export function IntegrationsSection() {
           textStyle={settingsStyles.sectionHeaderLinkText}
           style={settingsStyles.sectionHeaderLink}
           onPress={handleOpenSkillsDocs}
-          accessibilityLabel="Open skills documentation"
+          accessibilityLabel={t.integrations.skillsDocs}
         >
-          Skills docs
+          {t.integrations.skillsDocs}
         </Button>
       </View>
     ),
-    [arrowIcon, handleOpenCliDocs, handleOpenSkillsDocs],
+    [arrowIcon, handleOpenCliDocs, handleOpenSkillsDocs, t],
   );
 
   if (!showSection) {
@@ -97,20 +99,20 @@ export function IntegrationsSection() {
   }
 
   return (
-    <SettingsSection title="Integrations" trailing={trailing}>
+    <SettingsSection title={t.integrations.title} trailing={trailing}>
       <View style={settingsStyles.card}>
         <View style={settingsStyles.row}>
           <View style={settingsStyles.rowContent}>
             <View style={styles.rowTitleRow}>
               <Terminal size={theme.iconSize.md} color={theme.colors.foreground} />
-              <Text style={settingsStyles.rowTitle}>Command line</Text>
+              <Text style={settingsStyles.rowTitle}>{t.integrations.commandLine}</Text>
             </View>
-            <Text style={settingsStyles.rowHint}>Control and script agents from your terminal</Text>
+            <Text style={settingsStyles.rowHint}>{t.integrations.commandLineHint}</Text>
           </View>
           {cliStatus?.installed ? (
             <View style={styles.installedLabel}>
               <Check size={14} color={theme.colors.foregroundMuted} />
-              <Text style={styles.mutedText}>Installed</Text>
+              <Text style={styles.mutedText}>{t.integrations.installed}</Text>
             </View>
           ) : (
             <Button
@@ -119,7 +121,7 @@ export function IntegrationsSection() {
               onPress={handleInstallCli}
               disabled={isInstallingCli}
             >
-              {isInstallingCli ? "Installing..." : "Install"}
+              {isInstallingCli ? t.integrations.installing : t.common.add}
             </Button>
           )}
         </View>
@@ -127,16 +129,14 @@ export function IntegrationsSection() {
           <View style={settingsStyles.rowContent}>
             <View style={styles.rowTitleRow}>
               <Blocks size={theme.iconSize.md} color={theme.colors.foreground} />
-              <Text style={settingsStyles.rowTitle}>Orchestration skills</Text>
+              <Text style={settingsStyles.rowTitle}>{t.integrations.orchestrationSkills}</Text>
             </View>
-            <Text style={settingsStyles.rowHint}>
-              Teach your agents to orchestrate through the CLI
-            </Text>
+            <Text style={settingsStyles.rowHint}>{t.integrations.orchestrationSkillsHint}</Text>
           </View>
           {skillsStatus?.installed ? (
             <View style={styles.installedLabel}>
               <Check size={14} color={theme.colors.foregroundMuted} />
-              <Text style={styles.mutedText}>Installed</Text>
+              <Text style={styles.mutedText}>{t.integrations.installed}</Text>
             </View>
           ) : (
             <Button
@@ -145,7 +145,7 @@ export function IntegrationsSection() {
               onPress={handleInstallSkills}
               disabled={isInstallingSkills}
             >
-              {isInstallingSkills ? "Installing..." : "Install"}
+              {isInstallingSkills ? t.integrations.installing : t.common.add}
             </Button>
           )}
         </View>

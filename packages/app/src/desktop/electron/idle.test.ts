@@ -1,5 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { getDesktopSystemIdleTimeMs } from "./idle";
+
 const { invokeDesktopCommandMock } = vi.hoisted(() => ({
   invokeDesktopCommandMock: vi.fn<() => Promise<unknown>>(async () => 12_000),
 }));
@@ -7,8 +9,6 @@ const { invokeDesktopCommandMock } = vi.hoisted(() => ({
 vi.mock("@/desktop/electron/invoke", () => ({
   invokeDesktopCommand: invokeDesktopCommandMock,
 }));
-
-import { getDesktopSystemIdleTimeMs } from "./idle";
 
 describe("getDesktopSystemIdleTimeMs", () => {
   afterEach(() => {

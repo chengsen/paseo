@@ -10,6 +10,7 @@ import { connectToDaemon } from "@/utils/test-daemon-connection";
 import { ConnectionOfferSchema } from "@server/shared/connection-offer";
 import { AdaptiveModalSheet, AdaptiveTextInput } from "./adaptive-modal-sheet";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/i18n";
 
 const FLEX_ONE_STYLE = { flex: 1 } as const;
 
@@ -60,6 +61,7 @@ export interface PairLinkModalProps {
 
 export function PairLinkModal({ visible, onClose, onCancel, onSaved }: PairLinkModalProps) {
   const { theme } = useUnistyles();
+  const { t } = useTranslation();
   const daemons = useHosts();
   const { upsertConnectionFromOfferUrl: upsertDaemonFromOfferUrl } = useHostMutations();
   const isMobile = useIsCompactFormFactor();
@@ -97,11 +99,11 @@ export function PairLinkModal({ visible, onClose, onCancel, onSaved }: PairLinkM
     if (isSaving) return;
     const raw = offerUrlRef.current.trim();
     if (!raw) {
-      setErrorMessage("Paste a pairing link (…/#offer=...)");
+      setErrorMessage(t.pairScan.pastePairingLinkPlaceholder);
       return;
     }
     if (!raw.includes("#offer=")) {
-      setErrorMessage("Link must include #offer=...");
+      setErrorMessage(t.pairScan.linkMustIncludeOffer);
       return;
     }
 
@@ -115,10 +117,10 @@ export function PairLinkModal({ visible, onClose, onCancel, onSaved }: PairLinkM
         const payload = decodeOfferFragmentPayload(encoded);
         return ConnectionOfferSchema.parse(payload);
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Invalid pairing link";
+        const message = error instanceof Error ? error.message : t.pairScan.invalidPairingLink;
         setErrorMessage(message);
         if (!isMobile) {
-          Alert.alert("Pairing failed", message);
+          Alert.alert(t.pairScan.pairingFailed, message);
         }
         return null;
       }
@@ -149,15 +151,15 @@ export function PairLinkModal({ visible, onClose, onCancel, onSaved }: PairLinkM
       onSaved?.({ profile, serverId: parsedOffer.serverId, hostname, isNewHost });
       handleClose();
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Unable to pair host";
+      const message = error instanceof Error ? error.message : t.pairScan.unableToPair;
       setErrorMessage(message);
       if (!isMobile) {
-        Alert.alert("Pairing failed", message);
+        Alert.alert(t.pairScan.pairingFailed, message);
       }
     } finally {
       setIsSaving(false);
     }
-  }, [daemons, handleClose, isMobile, isSaving, onSaved, upsertDaemonFromOfferUrl]);
+  }, [daemons, handleClose, isMobile, isSaving, onSaved, t, upsertDaemonFromOfferUrl]);
 
   const handleChangeOfferUrl = useCallback((next: string) => {
     offerUrlRef.current = next;
@@ -169,15 +171,15 @@ export function PairLinkModal({ visible, onClose, onCancel, onSaved }: PairLinkM
 
   return (
     <AdaptiveModalSheet
-      title="Paste pairing link"
+      title={t.modal.pastePairingLink}
       visible={visible}
       onClose={handleClose}
       testID="pair-link-modal"
     >
-      <Text style={styles.helper}>Paste the pairing link from your server.</Text>
+      <Text style={styles.helper}>{t.pairScan.pastePairingLinkHint}</Text>
 
       <View style={styles.field}>
-        <Text style={styles.label}>Pairing link</Text>
+        <Text style={styles.label}>{t.pairScan.pairingLinkLabel}</Text>
         <AdaptiveTextInput
           ref={inputRef}
           testID="pair-link-input"
@@ -203,9 +205,9 @@ export function PairLinkModal({ visible, onClose, onCancel, onSaved }: PairLinkM
           disabled={isSaving}
           testID="pair-link-cancel"
           accessibilityRole="button"
-          accessibilityLabel="Cancel"
+          accessibilityLabel={t.common.cancel}
         >
-          Cancel
+          {t.common.cancel}
         </Button>
         <Button
           style={FLEX_ONE_STYLE}
@@ -214,10 +216,10 @@ export function PairLinkModal({ visible, onClose, onCancel, onSaved }: PairLinkM
           disabled={isSaving}
           testID="pair-link-submit"
           accessibilityRole="button"
-          accessibilityLabel="Pair"
+          accessibilityLabel={t.pairScan.pair}
           leftIcon={pairIcon}
         >
-          {isSaving ? "Pairing..." : "Pair"}
+          {isSaving ? t.pairScan.pairing : t.pairScan.pair}
         </Button>
       </View>
     </AdaptiveModalSheet>

@@ -1,4 +1,4 @@
-import { Buffer } from "buffer";
+import { base64ToUint8Array, uint8ArrayToBase64 } from "@/utils/base64";
 import type { AgentStreamEventPayload, SessionOutboundMessage } from "@server/shared/messages";
 import { resolveVoiceUnavailableMessage } from "@/utils/server-info-capabilities";
 import type { DaemonServerInfo } from "@/stores/session-store";
@@ -208,12 +208,15 @@ export function createVoiceRuntime(deps: VoiceRuntimeDeps): VoiceRuntime {
     timeout: null,
     playing: false,
   };
-  const cuePcm16 = Uint8Array.from(Buffer.from(THINKING_TONE_NATIVE_PCM_BASE64, "base64"));
+  const cuePcm16 = base64ToUint8Array(THINKING_TONE_NATIVE_PCM_BASE64);
   const cueSource = {
     size: cuePcm16.byteLength,
     type: "audio/pcm;rate=16000;bits=16",
     async arrayBuffer() {
-      return cuePcm16.buffer.slice(cuePcm16.byteOffset, cuePcm16.byteOffset + cuePcm16.byteLength);
+      return cuePcm16.buffer.slice(
+        cuePcm16.byteOffset,
+        cuePcm16.byteOffset + cuePcm16.byteLength,
+      ) as ArrayBuffer;
     },
   };
   function emit(): void {
@@ -264,7 +267,7 @@ export function createVoiceRuntime(deps: VoiceRuntimeDeps): VoiceRuntime {
   }
 
   function decodeAudioChunk(base64: string): Uint8Array {
-    return Buffer.from(base64, "base64");
+    return base64ToUint8Array(base64);
   }
 
   function toPlaybackSource(
@@ -508,7 +511,7 @@ export function createVoiceRuntime(deps: VoiceRuntimeDeps): VoiceRuntime {
         return;
       }
 
-      const base64 = Buffer.from(chunk).toString("base64");
+      const base64 = uint8ArrayToBase64(chunk);
 
       void activeSession.adapter.sendVoiceAudioChunk(base64, PCM_MIME_TYPE).catch((error) => {
         console.error(`[VoiceRuntime#${instanceId}] Failed to send audio chunk:`, error);

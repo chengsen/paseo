@@ -100,8 +100,12 @@ vi.mock("@/constants/platform", () => ({
 }));
 
 vi.mock("lucide-react-native", () => {
-  const createIcon = (name: string) => (props: Record<string, unknown>) =>
-    React.createElement("span", { ...props, "data-icon": name });
+  const createIcon = (name: string) => {
+    const Icon = (props: Record<string, unknown>) =>
+      React.createElement("span", { ...props, "data-icon": name });
+    Icon.displayName = `Icon(${name})`;
+    return Icon;
+  };
   return {
     Check: createIcon("Check"),
     CircleDot: createIcon("CircleDot"),

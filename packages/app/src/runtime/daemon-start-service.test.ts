@@ -178,7 +178,7 @@ describe("DaemonStartService", () => {
     await service.start();
     expect(service.getLastError()).toBe("ipc broke");
 
-    const errorSnapshots: Array<string | null> = [];
+    const errorSnapshots: (string | null)[] = [];
     service.subscribe(() => {
       errorSnapshots.push(service.getLastError());
     });

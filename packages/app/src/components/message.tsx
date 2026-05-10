@@ -81,6 +81,7 @@ import {
 import { getMarkdownListMarker } from "@/utils/markdown-list";
 import { openExternalUrl } from "@/utils/open-external-url";
 import { splitMarkdownBlocks } from "@/utils/split-markdown-blocks";
+import { useTranslation } from "@/i18n";
 import {
   getAssistantImageLoadStateFromMetadata,
   getAssistantImageMetadata,
@@ -444,6 +445,7 @@ export const UserMessage = memo(function UserMessage({
   isLastInGroup = true,
   disableOuterSpacing,
 }: UserMessageProps) {
+  const { t } = useTranslation();
   const isCompact = useIsCompactFormFactor();
   const [messageHovered, setMessageHovered] = useState(false);
   const [copyButtonHovered, setCopyButtonHovered] = useState(false);
@@ -533,7 +535,7 @@ export const UserMessage = memo(function UserMessage({
           <TurnCopyButton
             getContent={getMessageContent}
             containerStyle={copyButtonStyle}
-            accessibilityLabel="Copy message"
+            accessibilityLabel={t.message.copyMessage}
             onHoverChange={setCopyButtonHovered}
           />
         ) : null}
@@ -627,6 +629,7 @@ const AssistantMarkdownResolvedImage = memo(function AssistantMarkdownResolvedIm
   workspaceRoot?: string;
   serverId?: string;
 }) {
+  const { t } = useTranslation();
   const cachedMetadata = useMemo(
     () => getAssistantImageMetadata({ source, workspaceRoot, serverId }),
     [serverId, source, workspaceRoot],
@@ -702,7 +705,9 @@ const AssistantMarkdownResolvedImage = memo(function AssistantMarkdownResolvedIm
         <View style={stateSurfaceStyle}>
           {loadState.status === "loading" ? <ActivityIndicator size="small" /> : null}
           {loadState.status === "error" ? (
-            <Text style={assistantMessageStylesheet.imageErrorText}>Image unavailable</Text>
+            <Text style={assistantMessageStylesheet.imageErrorText}>
+              {t.message.imageUnavailable}
+            </Text>
           ) : null}
         </View>
       </View>
@@ -1758,6 +1763,7 @@ export const SpeakMessage = memo(function SpeakMessage({
   timestamp: _timestamp,
   disableOuterSpacing,
 }: SpeakMessageProps) {
+  const { t } = useTranslation();
   const resolvedDisableOuterSpacing = useDisableOuterSpacing(disableOuterSpacing);
   const containerStyle = useMemo(
     () => [
@@ -1771,7 +1777,7 @@ export const SpeakMessage = memo(function SpeakMessage({
     <View testID="speak-message" style={containerStyle}>
       <View style={speakMessageStylesheet.header}>
         <ThemedMicVocal size={12} uniProps={foregroundMutedColorMapping} />
-        <Text style={speakMessageStylesheet.headerLabel}>Spoke</Text>
+        <Text style={speakMessageStylesheet.headerLabel}>{t.message.spoke}</Text>
       </View>
       <Text style={speakMessageStylesheet.text}>{message}</Text>
     </View>
@@ -1873,6 +1879,7 @@ export const ActivityLog = memo(function ActivityLog({
   onArtifactClick,
   disableOuterSpacing,
 }: ActivityLogProps) {
+  const { t } = useTranslation();
   const resolvedDisableOuterSpacing = useDisableOuterSpacing(disableOuterSpacing);
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -1942,7 +1949,7 @@ export const ActivityLog = memo(function ActivityLog({
             </Text>
             {metadata && (
               <View style={activityLogStylesheet.detailsRow}>
-                <Text style={activityLogStylesheet.detailsText}>Details</Text>
+                <Text style={activityLogStylesheet.detailsText}>{t.message.details}</Text>
                 {isExpanded ? (
                   <ChevronDown size={12} color="#71717a" />
                 ) : (

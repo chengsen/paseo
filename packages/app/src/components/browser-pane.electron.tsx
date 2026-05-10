@@ -24,6 +24,7 @@ import {
 } from "@/desktop/host";
 import { isDev } from "@/constants/platform";
 import { useBrowserStore, normalizeWorkspaceBrowserUrl } from "@/stores/browser-store";
+import { useTranslation } from "@/i18n";
 
 type ElectronWebview = HTMLElement & {
   canGoBack?: () => boolean;
@@ -55,7 +56,7 @@ function truncateText(value: string, maxLength: number): string {
   return value.length > maxLength ? `${value.slice(0, maxLength).trim()}...` : value;
 }
 
-function getWebviewLoadErrorMessage(event: Event): string | null {
+function getWebviewLoadErrorMessage(event: Event, fallbackMessage: string): string | null {
   const details = event as Event & {
     errorCode?: unknown;
     errorDescription?: unknown;
@@ -69,7 +70,7 @@ function getWebviewLoadErrorMessage(event: Event): string | null {
   const description =
     typeof details.errorDescription === "string" && details.errorDescription.trim()
       ? details.errorDescription.trim()
-      : "Failed to load page";
+      : fallbackMessage;
   const url =
     typeof details.validatedURL === "string" && details.validatedURL.trim()
       ? details.validatedURL.trim()
@@ -78,7 +79,7 @@ function getWebviewLoadErrorMessage(event: Event): string | null {
   return url ? `${description}: ${url}` : description;
 }
 
-function getLoadUrlRejectionMessage(error: unknown): string | null {
+function getLoadUrlRejectionMessage(error: unknown, fallbackMessage: string): string | null {
   if (error instanceof Error && error.message.trim()) {
     if (error.message.includes("ERR_ABORTED") || error.message.includes("ERR_BLOCKED_BY_CLIENT")) {
       return null;
@@ -91,7 +92,7 @@ function getLoadUrlRejectionMessage(error: unknown): string | null {
     }
     return error.trim();
   }
-  return "Failed to load page";
+  return fallbackMessage;
 }
 
 function getUnsafeNavigationMessage(url: string): string | null {
@@ -282,6 +283,7 @@ export function BrowserPane({
   isInteractive?: boolean;
   onFocusPane?: () => void;
 }) {
+  const { t } = useTranslation();
   const { theme } = useUnistyles();
   const browser = useBrowserStore((state) => state.browsersById[browserId] ?? null);
   const updateBrowser = useBrowserStore((state) => state.updateBrowser);
@@ -459,7 +461,7 @@ export function BrowserPane({
       updateBrowserRef.current(browserIdRef.current, { faviconUrl: favicons[0] ?? null });
     };
     const handleLoadFailed = (event: Event) => {
-      const message = getWebviewLoadErrorMessage(event);
+      const message = getWebviewLoadErrorMessage(event, t.browserPane.failedToLoadPage);
       if (!message) {
         return;
       }
@@ -519,43 +521,46 @@ export function BrowserPane({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [browserId, onFocusPane]);
 
-  const navigate = useCallback((nextUrl: string) => {
-    const normalizedUrl = normalizeWorkspaceBrowserUrl(nextUrl);
-    const webview = webviewRef.current;
-    const unsafeNavigationMessage = getUnsafeNavigationMessage(normalizedUrl);
-    const previousUrl = browserRef.current?.url ?? initialUrlRef.current;
-    pendingNavigationUrlRef.current = unsafeNavigationMessage ? null : normalizedUrl;
-    updateBrowserRef.current(browserIdRef.current, {
-      url: normalizedUrl,
-      isLoading: unsafeNavigationMessage === null,
-      ...(normalizedUrl !== previousUrl ? { faviconUrl: null } : {}),
-      lastError: null,
-    });
-    setDraftUrl((current) => (current === normalizedUrl ? current : normalizedUrl));
-    if (unsafeNavigationMessage) {
+  const navigate = useCallback(
+    (nextUrl: string) => {
+      const normalizedUrl = normalizeWorkspaceBrowserUrl(nextUrl);
+      const webview = webviewRef.current;
+      const unsafeNavigationMessage = getUnsafeNavigationMessage(normalizedUrl);
+      const previousUrl = browserRef.current?.url ?? initialUrlRef.current;
+      pendingNavigationUrlRef.current = unsafeNavigationMessage ? null : normalizedUrl;
       updateBrowserRef.current(browserIdRef.current, {
-        isLoading: false,
-        lastError: unsafeNavigationMessage,
+        url: normalizedUrl,
+        isLoading: unsafeNavigationMessage === null,
+        ...(normalizedUrl !== previousUrl ? { faviconUrl: null } : {}),
+        lastError: null,
       });
-      return;
-    }
-    if (webview?.loadURL) {
-      void webview.loadURL(normalizedUrl).catch((error: unknown) => {
-        const message = getLoadUrlRejectionMessage(error);
-        if (!message) {
-          return;
-        }
+      setDraftUrl((current) => (current === normalizedUrl ? current : normalizedUrl));
+      if (unsafeNavigationMessage) {
         updateBrowserRef.current(browserIdRef.current, {
           isLoading: false,
-          lastError: message,
+          lastError: unsafeNavigationMessage,
         });
-      });
-      return;
-    }
-    if (webview) {
-      webview.setAttribute("src", normalizedUrl);
-    }
-  }, []);
+        return;
+      }
+      if (webview?.loadURL) {
+        void webview.loadURL(normalizedUrl).catch((error: unknown) => {
+          const message = getLoadUrlRejectionMessage(error, t.browserPane.failedToLoadPage);
+          if (!message) {
+            return;
+          }
+          updateBrowserRef.current(browserIdRef.current, {
+            isLoading: false,
+            lastError: message,
+          });
+        });
+        return;
+      }
+      if (webview) {
+        webview.setAttribute("src", normalizedUrl);
+      }
+    },
+    [t.browserPane.failedToLoadPage],
+  );
 
   const handleBack = useCallback(() => {
     webviewRef.current?.goBack?.();
@@ -929,10 +934,8 @@ export function BrowserPane({
   if (!isElectronRuntime()) {
     return (
       <View style={styles.unavailableState}>
-        <Text style={titleStyle}>Browser is desktop-only</Text>
-        <Text style={subtitleStyle}>
-          Open this workspace in Electron to use the built-in browser.
-        </Text>
+        <Text style={titleStyle}>{t.browserPane.desktopOnly}</Text>
+        <Text style={subtitleStyle}>{t.browserPane.openInElectron}</Text>
       </View>
     );
   }
@@ -943,7 +946,7 @@ export function BrowserPane({
         <View style={styles.chromeLeft}>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Back"
+            accessibilityLabel={t.browserPane.back}
             disabled={!browser?.canGoBack}
             onPress={handleBack}
             style={backIconButtonStyle}
@@ -952,7 +955,7 @@ export function BrowserPane({
           </Pressable>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Forward"
+            accessibilityLabel={t.browserPane.forward}
             disabled={!browser?.canGoForward}
             onPress={handleForward}
             style={forwardIconButtonStyle}
@@ -970,13 +973,13 @@ export function BrowserPane({
         </View>
         <View style={styles.urlBarWrap}>
           <TextInput
-            accessibilityLabel="Browser URL"
+            accessibilityLabel={t.browserPane.browserUrl}
             autoCapitalize="none"
             autoCorrect={false}
             onChangeText={setDraftUrl}
             onFocus={handleUrlBarFocus}
             onSubmitEditing={handleNavigateDraftUrl}
-            placeholder="Enter URL"
+            placeholder={t.common.enterUrl}
             placeholderTextColor={theme.colors.foregroundMuted}
             ref={urlInputRef}
             style={urlInputStyle}

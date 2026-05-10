@@ -31,6 +31,7 @@ import type { PrHint } from "@/hooks/use-checkout-pr-status-query";
 import { openExternalUrl } from "@/utils/open-external-url";
 import { PrBadge } from "@/components/sidebar-workspace-list";
 import { useHoverSafeZone } from "@/hooks/use-hover-safe-zone";
+import { useTranslation } from "@/i18n";
 
 interface Rect {
   x: number;
@@ -216,6 +217,7 @@ function WorkspaceHoverCardContent({
   triggerRef: React.RefObject<View | null>;
   contentRef: React.RefObject<View | null>;
 }): ReactElement | null {
+  const { t } = useTranslation();
   const bottomSheetInternal = useBottomSheetModalInternal(true);
   const [triggerRect, setTriggerRect] = useState<Rect | null>(null);
   const [contentSize, setContentSize] = useState<{ width: number; height: number } | null>(null);
@@ -282,7 +284,7 @@ function WorkspaceHoverCardContent({
           collapsable={false}
           onLayout={handleLayout}
           accessibilityRole="menu"
-          accessibilityLabel="Workspace scripts"
+          accessibilityLabel={t.workspace.workspaceScripts}
           testID="workspace-hover-card"
           style={cardStyle}
         >
@@ -327,6 +329,7 @@ function ChecksSummaryContent({
   checks: NonNullable<PrHint["checks"]>;
   hovered: boolean;
 }) {
+  const { t } = useTranslation();
   const failed = checks.filter((c) => c.status === "failure").length;
   const pending = checks.filter((c) => c.status === "pending").length;
 
@@ -335,15 +338,15 @@ function ChecksSummaryContent({
   let statusTextStyle: StyleProp<TextStyle>;
 
   if (failed > 0) {
-    badgeLabel = `${failed} failed`;
+    badgeLabel = t.workspace.checksFailed.replace("{count}", String(failed));
     dotStyle = styles.checksDotFailed;
     statusTextStyle = styles.checksStatusTextFailed;
   } else if (pending > 0) {
-    badgeLabel = `${pending} running`;
+    badgeLabel = t.workspace.checksRunning.replace("{count}", String(pending));
     dotStyle = styles.checksDotPending;
     statusTextStyle = styles.checksStatusTextPending;
   } else {
-    badgeLabel = `${checks.length} passed`;
+    badgeLabel = t.workspace.checksPassed.replace("{count}", String(checks.length));
     dotStyle = styles.checksDotPassed;
     statusTextStyle = styles.checksStatusTextPassed;
   }
@@ -358,7 +361,7 @@ function ChecksSummaryContent({
       ) : (
         <ThemedGitHubIcon size={12} uniProps={iconUniProps} />
       )}
-      <Text style={labelStyle}>Checks</Text>
+      <Text style={labelStyle}>{t.workspace.checks}</Text>
       <View style={styles.checksSummaryCounts}>
         <View style={dotStyle} />
         <Text style={statusTextStyle}>{badgeLabel}</Text>

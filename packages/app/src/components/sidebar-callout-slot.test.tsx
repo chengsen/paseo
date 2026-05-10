@@ -5,6 +5,9 @@ import React, { act, useEffect } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { SidebarCalloutProvider, useSidebarCallouts } from "@/contexts/sidebar-callout-context";
+import { SidebarCalloutSlot } from "./sidebar-callout-slot";
+
 const { theme } = vi.hoisted(() => ({
   theme: {
     spacing: { 0: 0, 1: 4, 2: 8, 3: 12, 4: 16 },
@@ -46,9 +49,6 @@ vi.mock("lucide-react-native", () => {
 
 vi.stubGlobal("React", React);
 vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
-
-import { SidebarCalloutProvider, useSidebarCallouts } from "@/contexts/sidebar-callout-context";
-import { SidebarCalloutSlot } from "./sidebar-callout-slot";
 
 function RegisterCallout() {
   const callouts = useSidebarCallouts();

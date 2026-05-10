@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
+import { useTranslation } from "@/i18n";
 import { Alert, Pressable, Text, View } from "react-native";
 import { SvgXml } from "react-native-svg";
 import { StyleSheet, withUnistyles } from "react-native-unistyles";
@@ -64,12 +65,13 @@ interface ProviderCatalogRowProps {
 }
 
 function ProviderCatalogRow({ entry, state, installing, onInstall }: ProviderCatalogRowProps) {
+  const { t } = useTranslation();
   const isAvailable = state === "available";
-  let actionLabel = "Add";
+  let actionLabel = t.common.add;
   if (installing) {
-    actionLabel = "Adding";
+    actionLabel = t.providers.adding;
   } else if (state === "installed") {
-    actionLabel = "Installed";
+    actionLabel = t.addProviderModal.installed;
   }
 
   const handleInstall = useCallback(() => {
@@ -108,12 +110,12 @@ function ProviderCatalogRow({ entry, state, installing, onInstall }: ProviderCat
         </Text>
         <Pressable
           accessibilityRole="link"
-          accessibilityLabel={`${entry.title} install instructions`}
+          accessibilityLabel={`${entry.title} ${t.addProviderModal.installInstructions}`}
           onPress={handleOpenInstallLink}
           style={styles.installLink}
         >
           <Text style={styles.installLinkText} numberOfLines={1}>
-            Install instructions
+            {t.addProviderModal.installInstructions}
           </Text>
           <ThemedExternalLink size={12} uniProps={foregroundMutedColorMapping} />
         </Pressable>
@@ -134,6 +136,7 @@ function ProviderCatalogRow({ entry, state, installing, onInstall }: ProviderCat
 }
 
 export function AddProviderModal({ serverId, visible, onClose }: AddProviderModalProps) {
+  const { t } = useTranslation();
   const { entries } = useAcpProviderCatalog();
   const { entries: providerEntries, refresh } = useProvidersSnapshot(serverId);
   const { patchConfig } = useDaemonConfig(serverId);
@@ -160,19 +163,25 @@ export function AddProviderModal({ serverId, visible, onClose }: AddProviderModa
         onClose();
       } catch (installError) {
         Alert.alert(
-          "Unable to install provider",
+          t.addProviderModal.unableToInstallProvider,
           installError instanceof Error ? installError.message : String(installError),
         );
       } finally {
         setInstallingProviderId((current) => (current === entry.id ? null : current));
       }
     },
-    [installingProviderId, onClose, patchConfig, refresh],
+    [
+      installingProviderId,
+      onClose,
+      patchConfig,
+      refresh,
+      t.addProviderModal.unableToInstallProvider,
+    ],
   );
 
   return (
     <AdaptiveModalSheet
-      title="Add provider"
+      title={t.providers.addProvider}
       visible={visible}
       onClose={onClose}
       desktopMaxWidth={680}
@@ -197,7 +206,7 @@ export function AddProviderModal({ serverId, visible, onClose }: AddProviderModa
 
       {filteredEntries.length === 0 ? (
         <View style={styles.stateBox}>
-          <Text style={styles.stateText}>No providers found</Text>
+          <Text style={styles.stateText}>{t.addProviderModal.noProvidersFound}</Text>
         </View>
       ) : null}
 
@@ -217,7 +226,7 @@ export function AddProviderModal({ serverId, visible, onClose }: AddProviderModa
 
       <View style={styles.actions}>
         <Button style={FLEX_ONE_STYLE} variant="secondary" onPress={onClose}>
-          Cancel
+          {t.common.cancel}
         </Button>
       </View>
     </AdaptiveModalSheet>

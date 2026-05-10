@@ -188,7 +188,7 @@ describe("voice runtime", () => {
 
   it("acknowledges chunks only after they are consumed and finishes after the final chunk", async () => {
     const adapter = createSessionAdapter();
-    const playResolvers: Array<(duration: number) => void> = [];
+    const playResolvers: ((duration: number) => void)[] = [];
     const engine = createAudioEngineMock();
     vi.mocked(engine.play).mockImplementation(
       () =>

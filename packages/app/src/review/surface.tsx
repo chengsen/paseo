@@ -19,6 +19,7 @@ import type { ShortcutKey } from "@/utils/format-shortcut";
 import { useWorkspaceFocusRestoration } from "@/workspace/focus";
 import { useReviewDraftComments, useReviewDraftStore, type ReviewDraftComment } from "./store";
 import { buildReviewableDiffTargetKey, type ReviewableDiffTarget } from "@/utils/diff-layout";
+import { useTranslation } from "@/i18n";
 
 type PressableState = PressableStateCallbackType & { hovered?: boolean };
 type WebTextInputRef = TextInput & {
@@ -283,6 +284,7 @@ export function InlineReviewGutterCell({
   style?: StyleProp<ViewStyle>;
 }) {
   const { theme } = useUnistyles();
+  const { t } = useTranslation();
   const canComment = Boolean(reviewTarget);
   const hasComments = comments.length > 0;
   const [isGutterHovered, setIsGutterHovered] = useState(false);
@@ -330,7 +332,7 @@ export function InlineReviewGutterCell({
   return (
     <Pressable
       accessibilityRole={canComment ? "button" : undefined}
-      accessibilityLabel={canComment ? "Add review comment" : undefined}
+      accessibilityLabel={canComment ? t.reviewSurface.reviewComment : undefined}
       hitSlop={canComment ? SMALL_ACTION_HIT_SLOP : undefined}
       disabled={!canComment}
       onPress={handlePress}
@@ -429,6 +431,7 @@ function CommentRow({
   onDeleteComment: (id: string) => void;
 }) {
   const { theme } = useUnistyles();
+  const { t } = useTranslation();
 
   const handleEdit = useCallback(
     () => onEditComment(reviewTarget, comment),
@@ -448,7 +451,7 @@ function CommentRow({
       <View style={styles.commentActions}>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Edit review comment"
+          accessibilityLabel={t.reviewSurface.editReviewComment}
           testID={`review-comment-edit-${comment.id}`}
           hitSlop={SMALL_ACTION_HIT_SLOP}
           onPress={handleEdit}
@@ -458,7 +461,7 @@ function CommentRow({
         </Pressable>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Delete review comment"
+          accessibilityLabel={t.reviewSurface.deleteReviewComment}
           testID={`review-comment-delete-${comment.id}`}
           hitSlop={SMALL_ACTION_HIT_SLOP}
           onPress={handleDelete}
@@ -497,6 +500,7 @@ export function InlineReviewEditor({
   onSave: (body: string) => void;
   testID?: string;
 }) {
+  const { t } = useTranslation();
   const { theme } = useUnistyles();
   const inputRef = useRef<TextInput | null>(null);
   const focus = useWorkspaceFocusRestoration();
@@ -572,9 +576,9 @@ export function InlineReviewEditor({
     <View style={styles.editorBlock} testID={testID}>
       <TextInput
         ref={inputRef}
-        accessibilityLabel="Review comment"
+        accessibilityLabel={t.reviewSurface.reviewComment}
         testID={testID ? `${testID}-input` : undefined}
-        placeholder="Leave a comment"
+        placeholder={t.common.leaveAComment}
         placeholderTextColor={theme.colors.foregroundMuted}
         multiline
         value={body}
@@ -585,7 +589,7 @@ export function InlineReviewEditor({
       />
       <View style={styles.editorActions}>
         <Button
-          accessibilityLabel="Cancel review comment"
+          accessibilityLabel={t.reviewSurface.cancelReviewComment}
           testID={testID ? `${testID}-cancel` : undefined}
           hitSlop={SMALL_ACTION_HIT_SLOP}
           onPress={onCancel}
@@ -593,10 +597,10 @@ export function InlineReviewEditor({
           size="xs"
           trailing={cancelShortcut}
         >
-          Cancel
+          {t.common.cancel}
         </Button>
         <Button
-          accessibilityLabel="Save review comment"
+          accessibilityLabel={t.reviewSurface.saveReviewComment}
           testID={testID ? `${testID}-save` : undefined}
           hitSlop={SMALL_ACTION_HIT_SLOP}
           disabled={!canSave}

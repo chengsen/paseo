@@ -237,7 +237,7 @@ function applyTimelineReplacePath(args: {
   currentHead: StreamItem[];
   toHydratedEvents: (
     units: TimelineUnit[],
-  ) => Array<{ event: AgentStreamEventPayload; timestamp: Date }>;
+  ) => { event: AgentStreamEventPayload; timestamp: Date }[];
 }): TimelinePathResult {
   const { timelineUnits, payload, bootstrapPolicy, currentHead, toHydratedEvents } = args;
   const hydratedTail = hydrateStreamState(toHydratedEvents(timelineUnits), { source: "canonical" });
@@ -483,7 +483,7 @@ export function processTimelineResponse(
 
   const toHydratedEvents = (
     units: typeof timelineUnits,
-  ): Array<{ event: AgentStreamEventPayload; timestamp: Date }> =>
+  ): { event: AgentStreamEventPayload; timestamp: Date }[] =>
     units.map(({ event, timestamp }) => ({ event, timestamp }));
 
   // ------------------------------------------------------------------

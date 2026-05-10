@@ -5,6 +5,7 @@ import { StyleSheet, useUnistyles } from "react-native-unistyles";
 import { ArrowLeft } from "lucide-react-native";
 import { ScreenHeader } from "./screen-header";
 import { ScreenTitle } from "./screen-title";
+import { useTranslation } from "@/i18n";
 
 interface BackHeaderProps {
   title?: string;
@@ -18,6 +19,7 @@ function goBack(): void {
 }
 
 export function BackHeader({ title, titleAccessory, rightContent, onBack }: BackHeaderProps) {
+  const { t } = useTranslation();
   const { theme } = useUnistyles();
   const handleBack = useCallback(() => {
     if (onBack) {
@@ -35,7 +37,7 @@ export function BackHeader({ title, titleAccessory, rightContent, onBack }: Back
             onPress={handleBack}
             style={styles.backButton}
             accessibilityRole="button"
-            accessibilityLabel="Back"
+            accessibilityLabel={t.backHeader.back}
           >
             <ArrowLeft size={theme.iconSize.lg} color={theme.colors.foregroundMuted} />
           </Pressable>

@@ -8,6 +8,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SidebarCalloutProvider } from "@/contexts/sidebar-callout-context";
 import { SidebarCalloutSlot } from "./sidebar-callout-slot";
 
+import { WorktreeSetupCalloutSource } from "./worktree-setup-callout-source";
+
 const { theme } = vi.hoisted(() => ({
   theme: {
     spacing: { 0: 0, 1: 4, 2: 8, 3: 12, 4: 16 },
@@ -106,8 +108,6 @@ vi.mock("lucide-react-native", () => {
 
 vi.stubGlobal("React", React);
 vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
-
-import { WorktreeSetupCalloutSource } from "./worktree-setup-callout-source";
 
 function readOk(config: Record<string, unknown>) {
   return {

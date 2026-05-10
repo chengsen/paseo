@@ -1,5 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { openProjectDirectly } from "@/hooks/use-open-project";
+import { useSessionStore } from "@/stores/session-store";
+import {
+  buildWorkspaceTabPersistenceKey,
+  collectAllTabs,
+  useWorkspaceLayoutStore,
+} from "@/stores/workspace-layout-store";
+import { generateDraftId } from "@/stores/draft-keys";
+
 vi.hoisted(() => {
   (globalThis as typeof globalThis & { __DEV__?: boolean }).__DEV__ = false;
 });
@@ -26,15 +35,6 @@ const { replaceRoute } = vi.hoisted(() => ({
 vi.mock("@/hooks/use-workspace-navigation", () => ({
   navigateToWorkspace: replaceRoute,
 }));
-
-import { openProjectDirectly } from "@/hooks/use-open-project";
-import { useSessionStore } from "@/stores/session-store";
-import {
-  buildWorkspaceTabPersistenceKey,
-  collectAllTabs,
-  useWorkspaceLayoutStore,
-} from "@/stores/workspace-layout-store";
-import { generateDraftId } from "@/stores/draft-keys";
 
 const SERVER_ID = "server-1";
 const WORKSPACE_ID = "/repo/project";

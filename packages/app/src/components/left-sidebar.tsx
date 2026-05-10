@@ -62,6 +62,7 @@ import {
   buildSettingsRoute,
   mapPathnameToServer,
 } from "@/utils/host-routes";
+import { useTranslation } from "@/i18n";
 import { SidebarAgentListSkeleton } from "./sidebar-agent-list-skeleton";
 import { SidebarCalloutSlot } from "./sidebar-callout-slot";
 import { SidebarWorkspaceList } from "./sidebar-workspace-list";
@@ -394,9 +395,10 @@ function AddProjectTooltipContent({
 }: {
   newAgentKeys: ReturnType<typeof useShortcutKeys>;
 }) {
+  const { t } = useTranslation();
   return (
     <View style={styles.tooltipRow}>
-      <Text style={styles.tooltipText}>Add project</Text>
+      <Text style={styles.tooltipText}>{t.projects.addProject}</Text>
       {newAgentKeys ? <Shortcut chord={newAgentKeys} /> : null}
     </View>
   );
@@ -429,6 +431,7 @@ function SidebarFooter({
   handleOpenProject: () => void;
   handleSettings: () => void;
 }) {
+  const { t } = useTranslation();
   const newAgentKeys = useShortcutKeys("new-agent");
   return (
     <View style={styles.sidebarFooter}>
@@ -447,7 +450,7 @@ function SidebarFooter({
             <FooterIconButton
               onPress={handleOpenProject}
               testID="sidebar-add-project"
-              accessibilityLabel="Add project"
+              accessibilityLabel={t.projects.addProject}
               icon={FolderPlus}
               theme={theme}
             />
@@ -507,6 +510,7 @@ function MobileSidebar({
   closeToAgent,
   handleViewMoreNavigate,
 }: MobileSidebarProps) {
+  const { t } = useTranslation();
   const pathname = usePathname();
   const isSessionsActive = pathname.includes("/sessions");
   const {
@@ -674,7 +678,7 @@ function MobileSidebar({
           <View style={styles.sidebarContent} pointerEvents="auto">
             <SidebarHeaderRow
               icon={MessagesSquare}
-              label="Sessions"
+              label={t.sessions.title}
               onPress={handleViewMore}
               isActive={isSessionsActive}
               testID="sidebar-sessions"
@@ -743,6 +747,7 @@ function DesktopSidebar({
   isOpen,
   handleViewMore,
 }: DesktopSidebarProps) {
+  const { t } = useTranslation();
   const pathname = usePathname();
   const isSessionsActive = pathname.includes("/sessions");
   const padding = useWindowControlsPadding("sidebar");
@@ -812,7 +817,7 @@ function DesktopSidebar({
           {padding.top > 0 ? <View style={paddingTopSpacerStyle} /> : null}
           <SidebarHeaderRow
             icon={MessagesSquare}
-            label="Sessions"
+            label={t.sessions.title}
             onPress={handleViewMore}
             isActive={isSessionsActive}
             testID="sidebar-sessions"

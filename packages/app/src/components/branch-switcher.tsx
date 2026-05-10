@@ -10,6 +10,7 @@ import { useHostRuntimeClient, useHostRuntimeIsConnected } from "@/runtime/host-
 import { useToast } from "@/contexts/toast-context";
 import { useBranchSwitcher } from "@/hooks/use-branch-switcher";
 import { ScreenTitle } from "@/components/headers/screen-title";
+import { useTranslation } from "@/i18n";
 
 interface BranchSwitcherProps {
   currentBranchName: string | null;
@@ -26,6 +27,7 @@ export function BranchSwitcher({
   workspaceId,
   isGitCheckout,
 }: BranchSwitcherProps) {
+  const { t } = useTranslation();
   const { theme } = useUnistyles();
   const isCompact = useIsCompactFormFactor();
   const anchorRef = useRef<View>(null);
@@ -101,10 +103,10 @@ export function BranchSwitcher({
         value={currentBranchName}
         onSelect={handleBranchSelect}
         searchable
-        placeholder="Switch branch..."
-        searchPlaceholder="Filter branches..."
-        emptyText="No branches found."
-        title="Switch branch"
+        placeholder={t.workspace.switchBranch}
+        searchPlaceholder={t.workspace.filterBranches}
+        emptyText={t.workspace.noBranchesFound}
+        title={t.workspace.switchBranch}
         open={isOpen}
         onOpenChange={setIsOpen}
         anchorRef={anchorRef}

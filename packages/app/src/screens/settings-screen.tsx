@@ -12,7 +12,6 @@ import { useRouter } from "expo-router";
 import { useFocusEffect } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
-import { Buffer } from "buffer";
 import {
   ArrowLeft,
   Sun,
@@ -41,12 +40,15 @@ import {
   type SendBehavior,
   type ServiceUrlBehavior,
   type Settings as EffectiveSettings,
+  type Language,
 } from "@/hooks/use-settings";
+import { useTranslation } from "@/i18n";
 import { THEME_SWATCHES } from "@/styles/theme";
 import { getHostRuntimeStore, isHostRuntimeConnected, useHosts } from "@/runtime/host-runtime";
 import { TitlebarDragRegion } from "@/components/desktop/titlebar-drag-region";
 import { useWindowControlsPadding } from "@/utils/desktop-window";
 import { confirmDialog } from "@/utils/confirm-dialog";
+import { base64ToUint8Array } from "@/utils/base64";
 import { BackHeader } from "@/components/headers/back-header";
 import { ScreenHeader } from "@/components/headers/screen-header";
 import { AddHostMethodModal } from "@/components/add-host-method-modal";
@@ -168,33 +170,7 @@ function selectedSidebarItemStyle({ hovered }: PressableStateCallbackType & { ho
   ];
 }
 
-const THEME_LABELS: Record<AppSettings["theme"], string> = {
-  light: "Light",
-  dark: "Dark",
-  zinc: "Zinc",
-  midnight: "Midnight",
-  claude: "Claude",
-  ghostty: "Ghostty",
-  auto: "System",
-};
-
 const ROW_WITH_BORDER_STYLE = [settingsStyles.row, settingsStyles.rowBorder];
-
-const SEND_BEHAVIOR_OPTIONS = [
-  { value: "interrupt" as const, label: "Interrupt" },
-  { value: "queue" as const, label: "Queue" },
-];
-
-const RELEASE_CHANNEL_OPTIONS = [
-  { value: "stable" as const, label: "Stable" },
-  { value: "beta" as const, label: "Beta" },
-];
-
-const SERVICE_URL_BEHAVIOR_LABELS: Record<ServiceUrlBehavior, string> = {
-  ask: "Ask",
-  "in-app": "In Paseo",
-  external: "External browser",
-};
 
 const SERVICE_URL_BEHAVIOR_VALUES: ServiceUrlBehavior[] = ["ask", "in-app", "external"];
 
@@ -225,6 +201,7 @@ function ThemeMenuItem({
   iconColor,
   onChange,
 }: ThemeMenuItemProps) {
+  const { t } = useTranslation();
   const handleSelect = useCallback(() => {
     onChange(themeValue);
   }, [onChange, themeValue]);
@@ -234,7 +211,7 @@ function ThemeMenuItem({
   );
   return (
     <DropdownMenuItem selected={selected} onSelect={handleSelect} leading={leading}>
-      {THEME_LABELS[themeValue]}
+      {t.theme[themeValue]}
     </DropdownMenuItem>
   );
 }
@@ -250,12 +227,31 @@ function ServiceUrlBehaviorMenuItem({
   selected,
   onChange,
 }: ServiceUrlBehaviorMenuItemProps) {
+  const { t } = useTranslation();
   const handleSelect = useCallback(() => {
     onChange(value);
   }, [onChange, value]);
   return (
     <DropdownMenuItem selected={selected} onSelect={handleSelect}>
-      {SERVICE_URL_BEHAVIOR_LABELS[value]}
+      {t.serviceUrlBehavior[value]}
+    </DropdownMenuItem>
+  );
+}
+
+interface LanguageMenuItemProps {
+  value: Language;
+  label: string;
+  selected: boolean;
+  onChange: (value: Language) => void;
+}
+
+function LanguageMenuItem({ value, label, selected, onChange }: LanguageMenuItemProps) {
+  const handleSelect = useCallback(() => {
+    onChange(value);
+  }, [onChange, value]);
+  return (
+    <DropdownMenuItem selected={selected} onSelect={handleSelect}>
+      {label}
     </DropdownMenuItem>
   );
 }
@@ -266,41 +262,61 @@ function GeneralSection({
   handleThemeChange,
   handleSendBehaviorChange,
   handleServiceUrlBehaviorChange,
-}: GeneralSectionProps) {
+  handleLanguageChange,
+}: GeneralSectionProps & {
+  handleLanguageChange: (language: Language) => void;
+}) {
   const { theme } = useUnistyles();
+  const { t } = useTranslation();
   const iconSize = theme.iconSize.md;
   const iconColor = theme.colors.foregroundMuted;
 
+  const sendBehaviorOptions = useMemo(
+    () => [
+      { value: "interrupt" as const, label: t.sendBehavior.interrupt },
+      { value: "queue" as const, label: t.sendBehavior.queue },
+    ],
+    [t],
+  );
+
+  const languageOptions: { value: Language; label: string }[] = useMemo(
+    () => [
+      { value: "en", label: t.language.en },
+      { value: "zh-CN", label: t.language.zhCN },
+    ],
+    [t],
+  );
+
   return (
-    <SettingsSection title="General">
+    <SettingsSection title={t.generalSettings.title}>
       <View style={settingsStyles.card}>
         <View style={settingsStyles.row}>
           <View style={settingsStyles.rowContent}>
-            <Text style={settingsStyles.rowTitle}>Theme</Text>
+            <Text style={settingsStyles.rowTitle}>{t.generalSettings.theme}</Text>
           </View>
           <DropdownMenu>
             <DropdownMenuTrigger style={themeTriggerStyle}>
               <ThemeIcon theme={settings.theme} size={iconSize} color={iconColor} />
-              <Text style={styles.themeTriggerText}>{THEME_LABELS[settings.theme]}</Text>
+              <Text style={styles.themeTriggerText}>{t.theme[settings.theme]}</Text>
               <ChevronDown size={theme.iconSize.sm} color={iconColor} />
             </DropdownMenuTrigger>
             <DropdownMenuContent side="bottom" align="end" width={200}>
-              {(["light", "dark", "auto"] as const).map((t) => (
+              {(["light", "dark", "auto"] as const).map((tv) => (
                 <ThemeMenuItem
-                  key={t}
-                  themeValue={t}
-                  selected={settings.theme === t}
+                  key={tv}
+                  themeValue={tv}
+                  selected={settings.theme === tv}
                   iconSize={iconSize}
                   iconColor={iconColor}
                   onChange={handleThemeChange}
                 />
               ))}
               <DropdownMenuSeparator />
-              {(["zinc", "midnight", "claude", "ghostty"] as const).map((t) => (
+              {(["zinc", "midnight", "claude", "ghostty"] as const).map((tv) => (
                 <ThemeMenuItem
-                  key={t}
-                  themeValue={t}
-                  selected={settings.theme === t}
+                  key={tv}
+                  themeValue={tv}
+                  selected={settings.theme === tv}
                   iconSize={iconSize}
                   iconColor={iconColor}
                   onChange={handleThemeChange}
@@ -311,28 +327,26 @@ function GeneralSection({
         </View>
         <View style={ROW_WITH_BORDER_STYLE}>
           <View style={settingsStyles.rowContent}>
-            <Text style={settingsStyles.rowTitle}>Default send</Text>
-            <Text style={settingsStyles.rowHint}>
-              What happens when you press Enter while the agent is running
-            </Text>
+            <Text style={settingsStyles.rowTitle}>{t.generalSettings.defaultSend}</Text>
+            <Text style={settingsStyles.rowHint}>{t.generalSettings.defaultSendHint}</Text>
           </View>
           <SegmentedControl
             size="sm"
             value={settings.sendBehavior}
             onValueChange={handleSendBehaviorChange}
-            options={SEND_BEHAVIOR_OPTIONS}
+            options={sendBehaviorOptions}
           />
         </View>
         {isDesktopApp ? (
           <View style={ROW_WITH_BORDER_STYLE}>
             <View style={settingsStyles.rowContent}>
-              <Text style={settingsStyles.rowTitle}>Service URLs</Text>
-              <Text style={settingsStyles.rowHint}>Where to open URLs from running scripts</Text>
+              <Text style={settingsStyles.rowTitle}>{t.generalSettings.serviceUrls}</Text>
+              <Text style={settingsStyles.rowHint}>{t.generalSettings.serviceUrlsHint}</Text>
             </View>
             <DropdownMenu>
               <DropdownMenuTrigger style={themeTriggerStyle}>
                 <Text style={styles.themeTriggerText}>
-                  {SERVICE_URL_BEHAVIOR_LABELS[settings.serviceUrlBehavior]}
+                  {t.serviceUrlBehavior[settings.serviceUrlBehavior]}
                 </Text>
                 <ChevronDown size={theme.iconSize.sm} color={iconColor} />
               </DropdownMenuTrigger>
@@ -349,6 +363,30 @@ function GeneralSection({
             </DropdownMenu>
           </View>
         ) : null}
+        <View style={ROW_WITH_BORDER_STYLE}>
+          <View style={settingsStyles.rowContent}>
+            <Text style={settingsStyles.rowTitle}>{t.generalSettings.language}</Text>
+          </View>
+          <DropdownMenu>
+            <DropdownMenuTrigger style={themeTriggerStyle}>
+              <Text style={styles.themeTriggerText}>
+                {settings.language === "zh-CN" ? t.language.zhCN : t.language.en}
+              </Text>
+              <ChevronDown size={theme.iconSize.sm} color={iconColor} />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent side="bottom" align="end" width={200}>
+              {languageOptions.map((option) => (
+                <LanguageMenuItem
+                  key={option.value}
+                  value={option.value}
+                  label={option.label}
+                  selected={settings.language === option.value}
+                  onChange={handleLanguageChange}
+                />
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </View>
       </View>
     </SettingsSection>
   );
@@ -367,15 +405,16 @@ function DiagnosticsSection({
   playbackTestResult,
   handlePlaybackTest,
 }: DiagnosticsSectionProps) {
+  const { t } = useTranslation();
   const handlePlayPress = useCallback(() => {
     void handlePlaybackTest();
   }, [handlePlaybackTest]);
   return (
-    <SettingsSection title="Diagnostics">
+    <SettingsSection title={t.diagnosticsSettings.title}>
       <View style={settingsStyles.card}>
         <View style={settingsStyles.row}>
           <View style={settingsStyles.rowContent}>
-            <Text style={settingsStyles.rowTitle}>Test audio</Text>
+            <Text style={settingsStyles.rowTitle}>{t.diagnosticsSettings.testAudio}</Text>
             {playbackTestResult ? (
               <Text style={settingsStyles.rowHint}>{playbackTestResult}</Text>
             ) : null}
@@ -386,7 +425,7 @@ function DiagnosticsSection({
             onPress={handlePlayPress}
             disabled={!voiceAudioEngine || isPlaybackTestRunning}
           >
-            {isPlaybackTestRunning ? "Playing..." : "Play test"}
+            {isPlaybackTestRunning ? t.diagnosticsSettings.playing : t.diagnosticsSettings.playTest}
           </Button>
         </View>
       </View>
@@ -400,12 +439,13 @@ interface AboutSectionProps {
 }
 
 function AboutSection({ appVersionText, isDesktopApp }: AboutSectionProps) {
+  const { t } = useTranslation();
   return (
-    <SettingsSection title="About">
+    <SettingsSection title={t.aboutSettings.title}>
       <View style={settingsStyles.card}>
         <View style={settingsStyles.row}>
           <View style={settingsStyles.rowContent}>
-            <Text style={settingsStyles.rowTitle}>Version</Text>
+            <Text style={settingsStyles.rowTitle}>{t.aboutSettings.version}</Text>
           </View>
           <Text style={styles.aboutValue}>{appVersionText}</Text>
         </View>
@@ -418,13 +458,15 @@ function AboutSection({ appVersionText, isDesktopApp }: AboutSectionProps) {
 function getUpdateButtonLabel(
   isInstalling: boolean,
   latestVersion: string | null | undefined,
+  t: ReturnType<typeof useTranslation>["t"],
 ): string {
-  if (isInstalling) return "Installing...";
-  if (latestVersion) return `Update to ${formatVersionWithPrefix(latestVersion)}`;
-  return "Update";
+  if (isInstalling) return t.aboutSettings.installing;
+  if (latestVersion) return `${t.aboutSettings.updateTo} ${formatVersionWithPrefix(latestVersion)}`;
+  return t.aboutSettings.update;
 }
 
 function DesktopAppUpdateRow() {
+  const { t } = useTranslation();
   const { settings, updateSettings } = useSettings();
   const {
     isDesktopApp,
@@ -436,6 +478,14 @@ function DesktopAppUpdateRow() {
     checkForUpdates,
     installUpdate,
   } = useDesktopAppUpdater();
+
+  const releaseChannelOptions = useMemo(
+    () => [
+      { value: "stable" as const, label: t.aboutSettings.releaseChannelStable },
+      { value: "beta" as const, label: t.aboutSettings.releaseChannelBeta },
+    ],
+    [t],
+  );
 
   useFocusEffect(
     useCallback(() => {
@@ -467,10 +517,10 @@ function DesktopAppUpdateRow() {
     }
 
     void confirmDialog({
-      title: "Install desktop update",
-      message: "This updates Paseo on this computer",
-      confirmLabel: "Install update",
-      cancelLabel: "Cancel",
+      title: t.aboutSettings.installDesktopUpdate,
+      message: t.aboutSettings.installDesktopUpdateMessage,
+      confirmLabel: t.aboutSettings.installDesktopUpdate,
+      cancelLabel: t.aboutSettings.cancel,
     })
       .then((confirmed) => {
         if (!confirmed) {
@@ -481,9 +531,9 @@ function DesktopAppUpdateRow() {
       })
       .catch((error) => {
         console.error("[Settings] Failed to open app update confirmation", error);
-        Alert.alert("Error", "Unable to open the update confirmation dialog.");
+        Alert.alert(t.aboutSettings.error, t.aboutSettings.unableToOpenDialog);
       });
-  }, [installUpdate, isDesktopApp]);
+  }, [installUpdate, isDesktopApp, t]);
 
   if (!isDesktopApp) {
     return null;
@@ -493,25 +543,24 @@ function DesktopAppUpdateRow() {
     <>
       <View style={ROW_WITH_BORDER_STYLE}>
         <View style={settingsStyles.rowContent}>
-          <Text style={settingsStyles.rowTitle}>Release channel</Text>
-          <Text style={settingsStyles.rowHint}>
-            Switch to Beta to get updates sooner and help shape them
-          </Text>
+          <Text style={settingsStyles.rowTitle}>{t.aboutSettings.releaseChannel}</Text>
+          <Text style={settingsStyles.rowHint}>{t.aboutSettings.releaseChannelHint}</Text>
         </View>
         <SegmentedControl
           size="sm"
           value={settings.releaseChannel}
           onValueChange={handleReleaseChannelChange}
-          options={RELEASE_CHANNEL_OPTIONS}
+          options={releaseChannelOptions}
         />
       </View>
       <View style={ROW_WITH_BORDER_STYLE}>
         <View style={settingsStyles.rowContent}>
-          <Text style={settingsStyles.rowTitle}>App updates</Text>
+          <Text style={settingsStyles.rowTitle}>{t.aboutSettings.appUpdates}</Text>
           <Text style={settingsStyles.rowHint}>{statusText}</Text>
           {availableUpdate?.latestVersion ? (
             <Text style={settingsStyles.rowHint}>
-              Ready to install: {formatVersionWithPrefix(availableUpdate.latestVersion)}
+              {t.aboutSettings.readyToInstall}
+              {formatVersionWithPrefix(availableUpdate.latestVersion)}
             </Text>
           ) : null}
           {errorMessage ? <Text style={styles.aboutErrorText}>{errorMessage}</Text> : null}
@@ -523,7 +572,7 @@ function DesktopAppUpdateRow() {
             onPress={handleCheckForUpdates}
             disabled={isChecking || isInstalling}
           >
-            {isChecking ? "Checking..." : "Check"}
+            {isChecking ? t.aboutSettings.checking : t.aboutSettings.check}
           </Button>
           <Button
             variant="default"
@@ -531,7 +580,7 @@ function DesktopAppUpdateRow() {
             onPress={handleInstallUpdate}
             disabled={isChecking || isInstalling || !availableUpdate}
           >
-            {getUpdateButtonLabel(isInstalling, availableUpdate?.latestVersion)}
+            {getUpdateButtonLabel(isInstalling, availableUpdate?.latestVersion, t)}
           </Button>
         </View>
       </View>
@@ -616,6 +665,7 @@ interface SidebarProjectsButtonProps {
 
 function SidebarProjectsButton({ isSelected, onSelect }: SidebarProjectsButtonProps) {
   const { theme } = useUnistyles();
+  const { t } = useTranslation();
   const accessibilityState = useMemo(() => ({ selected: isSelected }), [isSelected]);
   const labelStyle = useMemo(
     () => [sidebarStyles.label, isSelected && { color: theme.colors.foreground }],
@@ -634,7 +684,7 @@ function SidebarProjectsButton({ isSelected, onSelect }: SidebarProjectsButtonPr
         color={isSelected ? theme.colors.foreground : theme.colors.foregroundMuted}
       />
       <Text style={labelStyle} numberOfLines={1}>
-        Projects
+        {t.settings.projects}
       </Text>
     </Pressable>
   );
@@ -650,6 +700,7 @@ interface SidebarHostItemProps {
 
 function SidebarHostItem({ serverId, label, isSelected, isLocal, onSelect }: SidebarHostItemProps) {
   const { theme } = useUnistyles();
+  const { t } = useTranslation();
   const handlePress = useCallback(() => {
     onSelect(serverId);
   }, [onSelect, serverId]);
@@ -675,7 +726,7 @@ function SidebarHostItem({ serverId, label, isSelected, isLocal, onSelect }: Sid
       </Text>
       {isLocal ? (
         <Text style={sidebarStyles.localMarker} testID="settings-host-local-marker">
-          Local
+          {t.settings.local}
         </Text>
       ) : null}
     </Pressable>
@@ -702,6 +753,7 @@ function SettingsSidebar({
   layout,
 }: SettingsSidebarProps) {
   const { theme } = useUnistyles();
+  const { t } = useTranslation();
   const hosts = useHosts();
   const localServerId = useLocalDaemonServerId();
   const sortedHosts = useMemo(() => {
@@ -738,7 +790,7 @@ function SettingsSidebar({
       {isDesktop ? (
         <SidebarHeaderRow
           icon={ArrowLeft}
-          label="Back"
+          label={t.settings.back}
           onPress={onBackToWorkspace}
           testID="settings-back-to-workspace"
         />
@@ -748,7 +800,7 @@ function SettingsSidebar({
           <SidebarSectionButton
             key={item.id}
             itemId={item.id}
-            label={item.label}
+            label={t.settings[item.id]}
             icon={item.icon}
             isSelected={selectedSectionId === item.id}
             onSelect={onSelectSection}
@@ -770,14 +822,14 @@ function SettingsSidebar({
         ))}
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Add host"
+          accessibilityLabel={t.settings.addHost}
           onPress={onAddHost}
           testID="settings-add-host"
           style={sidebarItemStyle}
         >
           <Plus size={theme.iconSize.md} color={theme.colors.foregroundMuted} />
           <Text style={sidebarStyles.label} numberOfLines={1}>
-            Add host
+            {t.settings.addHost}
           </Text>
         </Pressable>
       </View>
@@ -796,6 +848,7 @@ export interface SettingsScreenProps {
 export default function SettingsScreen({ view }: SettingsScreenProps) {
   const router = useRouter();
   const { theme } = useUnistyles();
+  const { t } = useTranslation();
   const voiceAudioEngine = useVoiceAudioEngineOptional();
   const { settings, isLoading: settingsLoading, updateSettings } = useAppSettings();
   const [isAddHostMethodVisible, setIsAddHostMethodVisible] = useState(false);
@@ -834,6 +887,13 @@ export default function SettingsScreen({ view }: SettingsScreenProps) {
     [updateSettings],
   );
 
+  const handleLanguageChange = useCallback(
+    (language: Language) => {
+      void updateSettings({ language });
+    },
+    [updateSettings],
+  );
+
   const handlePlaybackTest = useCallback(async () => {
     if (!voiceAudioEngine || isPlaybackTestRunning) {
       return;
@@ -843,7 +903,7 @@ export default function SettingsScreen({ view }: SettingsScreenProps) {
     setPlaybackTestResult(null);
 
     try {
-      const bytes = Buffer.from(THINKING_TONE_NATIVE_PCM_BASE64, "base64");
+      const bytes = base64ToUint8Array(THINKING_TONE_NATIVE_PCM_BASE64);
       await voiceAudioEngine.initialize();
       voiceAudioEngine.stop();
       await voiceAudioEngine.play({
@@ -857,11 +917,11 @@ export default function SettingsScreen({ view }: SettingsScreenProps) {
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       console.error("[Settings] Playback test failed", error);
-      setPlaybackTestResult(`Playback failed: ${message}`);
+      setPlaybackTestResult(t.diagnosticsSettings.playbackFailed.replace("{message}", message));
     } finally {
       setIsPlaybackTestRunning(false);
     }
-  }, [isPlaybackTestRunning, voiceAudioEngine]);
+  }, [isPlaybackTestRunning, voiceAudioEngine, t.diagnosticsSettings.playbackFailed]);
 
   const closeAddConnectionFlow = useCallback(() => {
     setIsAddHostMethodVisible(false);
@@ -987,10 +1047,10 @@ export default function SettingsScreen({ view }: SettingsScreenProps) {
     if (view.kind === "section") {
       const item = SIDEBAR_SECTION_ITEMS.find((s) => s.id === view.section);
       if (!item) return null;
-      return { title: item.label, Icon: item.icon };
+      return { title: t.settings[item.id], Icon: item.icon };
     }
     if (view.kind === "project" || view.kind === "projects") {
-      return { title: "Projects", Icon: FolderGit2 };
+      return { title: t.settings.projects, Icon: FolderGit2 };
     }
     return null;
   })();
@@ -1015,6 +1075,7 @@ export default function SettingsScreen({ view }: SettingsScreenProps) {
               handleThemeChange={handleThemeChange}
               handleSendBehaviorChange={handleSendBehaviorChange}
               handleServiceUrlBehaviorChange={handleServiceUrlBehaviorChange}
+              handleLanguageChange={handleLanguageChange}
             />
           );
         case "shortcuts":
@@ -1042,7 +1103,7 @@ export default function SettingsScreen({ view }: SettingsScreenProps) {
   if (settingsLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>Loading settings...</Text>
+        <Text style={styles.loadingText}>{t.settings.loading}</Text>
       </View>
     );
   }
@@ -1075,7 +1136,7 @@ export default function SettingsScreen({ view }: SettingsScreenProps) {
   if (isCompactLayout && view.kind === "root") {
     return (
       <View style={styles.container}>
-        <BackHeader title="Settings" onBack={handleBackToWorkspace} />
+        <BackHeader title={t.settings.general} onBack={handleBackToWorkspace} />
         <ScrollView style={styles.scrollView} contentContainerStyle={insetBottomStyle}>
           <SettingsSidebar
             view={view}

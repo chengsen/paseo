@@ -16,6 +16,7 @@ import {
   MessageSquare,
 } from "lucide-react-native";
 import { openExternalUrl } from "@/utils/open-external-url";
+import { useTranslation } from "@/i18n";
 import { getActivityVerb, getStateLabel } from "@/utils/pr-pane-data";
 import type {
   CheckStatus,
@@ -34,6 +35,7 @@ function activityPressableStyle({ hovered }: { hovered?: boolean }) {
 }
 
 export function PrPane({ data }: { data: PrPaneData }) {
+  const { t } = useTranslation();
   const { theme } = useUnistyles();
   const [checksOpen, setChecksOpen] = useState(true);
   const [reviewsOpen, setReviewsOpen] = useState(true);
@@ -117,7 +119,7 @@ export function PrPane({ data }: { data: PrPaneData }) {
       <View style={styles.divider} />
 
       <Section
-        title="Checks"
+        title={t.workspace.checks}
         open={checksOpen}
         onToggle={handleToggleChecks}
         summary={
@@ -151,7 +153,7 @@ export function PrPane({ data }: { data: PrPaneData }) {
       <View style={styles.divider} />
 
       <Section
-        title="Reviews"
+        title={t.workspace.reviews}
         open={reviewsOpen}
         onToggle={handleToggleReviews}
         summary={

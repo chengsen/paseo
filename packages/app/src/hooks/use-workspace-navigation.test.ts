@@ -4,13 +4,13 @@
 import { renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
+import { navigateToWorkspace, useWorkspaceNavigation } from "@/hooks/use-workspace-navigation";
+
 const navigateToWorkspaceMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@/stores/navigation-active-workspace-store", () => ({
   navigateToWorkspace: navigateToWorkspaceMock,
 }));
-
-import { navigateToWorkspace, useWorkspaceNavigation } from "@/hooks/use-workspace-navigation";
 
 describe("useWorkspaceNavigation", () => {
   it("re-exports the workspace navigation action", () => {

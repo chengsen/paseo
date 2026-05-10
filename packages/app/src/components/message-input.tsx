@@ -54,6 +54,7 @@ import { isImeComposingKeyboardEvent } from "@/utils/keyboard-ime";
 import { isWeb } from "@/constants/platform";
 import { useComposerHeightMirror } from "./composer-height-mirror";
 import { computeCanStartDictation } from "./message-input-state";
+import { useTranslation } from "@/i18n";
 
 export type ImageAttachment = AttachmentMetadata;
 
@@ -215,13 +216,14 @@ function AttachmentDropdown({
   renderAttachButtonIcon: (input: { hovered?: boolean }) => React.ReactElement;
   attachmentMenuItems: AttachmentMenuItem[];
 }) {
+  const { t } = useTranslation();
   return (
     <DropdownMenu>
       <Tooltip delayDuration={0} enabledOnDesktop enabledOnMobile={false}>
         <TooltipTrigger asChild>
           <DropdownMenuTrigger
             disabled={!isConnected || disabled}
-            accessibilityLabel="Add attachment"
+            accessibilityLabel={t.message.addAttachment}
             accessibilityRole="button"
             testID="message-input-attach-button"
             style={attachButtonStyle}
@@ -230,7 +232,7 @@ function AttachmentDropdown({
           </DropdownMenuTrigger>
         </TooltipTrigger>
         <TooltipContent side="top" align="center" offset={8}>
-          <Text style={styles.tooltipText}>Add attachment</Text>
+          <Text style={styles.tooltipText}>{t.message.addAttachment}</Text>
         </TooltipContent>
       </Tooltip>
       <DropdownMenuContent

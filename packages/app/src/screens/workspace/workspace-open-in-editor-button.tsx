@@ -26,6 +26,7 @@ import { buildGitHubBranchTreeUrl } from "@/utils/github-repo-url";
 import { openExternalUrl } from "@/utils/open-external-url";
 import { isAbsolutePath } from "@/utils/path";
 import { isWeb } from "@/constants/platform";
+import { useTranslation } from "@/i18n";
 import type { Theme } from "@/styles/theme";
 
 interface WorkspaceOpenInEditorButtonProps {
@@ -79,6 +80,7 @@ export function WorkspaceOpenInEditorButton({
   cwd,
   hideLabels,
 }: WorkspaceOpenInEditorButtonProps) {
+  const { t } = useTranslation();
   const toast = useToast();
   const client = useHostRuntimeClient(serverId);
   const isConnected = useHostRuntimeIsConnected(serverId);
@@ -147,11 +149,11 @@ export function WorkspaceOpenInEditorButton({
     }
     return {
       id: "github",
-      label: "GitHub",
+      label: t.common.github,
       icon: <ThemedGitHubIcon size={16} uniProps={mutedColorMapping} />,
       onOpen: () => openExternalUrl(url),
     };
-  }, [checkoutStatus]);
+  }, [checkoutStatus, t.common.github]);
 
   const targets = useMemo(
     () => (githubTarget ? [...editorTargets, githubTarget] : editorTargets),

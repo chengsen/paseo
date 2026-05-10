@@ -17,6 +17,7 @@ import { SidebarMenuToggle } from "@/components/headers/menu-header";
 import { ScreenHeader } from "@/components/headers/screen-header";
 import { HEADER_INNER_HEIGHT, MAX_CONTENT_WIDTH, useIsCompactFormFactor } from "@/constants/layout";
 import { useToast } from "@/contexts/toast-context";
+import { useTranslation } from "@/i18n";
 import { useAgentInputDraft } from "@/hooks/use-agent-input-draft";
 import { useKeyboardShiftStyle } from "@/hooks/use-keyboard-shift-style";
 import { useHostRuntimeClient, useHostRuntimeIsConnected } from "@/runtime/host-runtime";
@@ -99,6 +100,7 @@ function RefPickerTrigger({
   iconColor: string;
   iconSize: number;
 }) {
+  const { t } = useTranslation();
   return (
     <Tooltip>
       <TooltipTrigger asChild triggerRefProp="ref">
@@ -120,7 +122,7 @@ function RefPickerTrigger({
         </Pressable>
       </TooltipTrigger>
       <TooltipContent side="top" align="center" offset={8}>
-        <Text style={styles.tooltipText}>Choose where to start from</Text>
+        <Text style={styles.tooltipText}>{t.workspace.chooseWhereToStart}</Text>
       </TooltipContent>
     </Tooltip>
   );
@@ -269,17 +271,18 @@ interface CreateChatAgentInput {
   }) => Promise<ReturnType<typeof normalizeWorkspaceDescriptor>>;
   serverId: string;
   draftKey: string;
+  t: ReturnType<typeof useTranslation>["t"];
 }
 
 async function runCreateChatAgent(input: CreateChatAgentInput): Promise<void> {
-  const { payload, composerState, ensureWorkspace, serverId, draftKey } = input;
+  const { payload, composerState, ensureWorkspace, serverId, draftKey, t } = input;
   const { text, attachments, cwd } = payload;
   if (!composerState) {
-    throw new Error("Composer state is required");
+    throw new Error(t.newWorkspaceScreen.composerStateRequired);
   }
   const provider = composerState.selectedProvider;
   if (!provider) {
-    throw new Error("Select a model");
+    throw new Error(t.newWorkspaceScreen.selectAModel);
   }
   const { attachments: reviewAttachments } = splitComposerAttachmentsForSubmit(attachments);
   const ensuredWorkspace = await ensureWorkspace({
@@ -393,6 +396,7 @@ export function NewWorkspaceScreen({
     mode: "translate",
   });
   const toast = useToast();
+  const { t } = useTranslation();
   const mergeWorkspaces = useSessionStore((state) => state.mergeWorkspaces);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [createdWorkspace, setCreatedWorkspace] = useState<ReturnType<
@@ -432,10 +436,10 @@ export function NewWorkspaceScreen({
 
   const withConnectedClient = useCallback(() => {
     if (!client || !isConnected) {
-      throw new Error("Host is not connected");
+      throw new Error(t.newWorkspaceScreen.hostIsNotConnected);
     }
     return client;
-  }, [client, isConnected]);
+  }, [client, isConnected, t.newWorkspaceScreen.hostIsNotConnected]);
 
   const clientReady = isConnected && Boolean(client);
   const pickerQueryEnabled = pickerOpen && clientReady;
@@ -504,8 +508,8 @@ export function NewWorkspaceScreen({
 
   const triggerLabel = useMemo(() => {
     if (selectedItem) return pickerItemTriggerLabel(selectedItem);
-    return currentBranch ?? "main";
-  }, [currentBranch, selectedItem]);
+    return currentBranch ?? t.workspace.defaultBranch;
+  }, [currentBranch, selectedItem, t.workspace.defaultBranch]);
 
   const selectedOptionId = useMemo(() => {
     if (!selectedItem) return "";
@@ -613,6 +617,7 @@ export function NewWorkspaceScreen({
           ensureWorkspace,
           serverId,
           draftKey,
+          t,
         });
       } catch (error) {
         const message = toErrorMessage(error);
@@ -621,7 +626,7 @@ export function NewWorkspaceScreen({
         toast.error(message);
       }
     },
-    [composerState, draftKey, ensureWorkspace, serverId, toast],
+    [composerState, draftKey, ensureWorkspace, serverId, toast, t],
   );
 
   const workspaceTitle = computeWorkspaceTitle(workspace, displayName, sourceDirectory);
@@ -700,8 +705,8 @@ export function NewWorkspaceScreen({
 
   const pickerEmptyText =
     branchSuggestionsQuery.isFetching || githubPrSearchQuery.isFetching
-      ? "Searching..."
-      : "No matching refs.";
+      ? t.workspace.searching
+      : t.workspace.noMatchingRefs;
 
   return (
     <View style={styles.container}>
@@ -711,7 +716,7 @@ export function NewWorkspaceScreen({
             <SidebarMenuToggle />
             <View style={styles.headerTitleContainer}>
               <Text style={styles.headerTitle} numberOfLines={1}>
-                New workspace
+                {t.workspace.newWorkspace}
               </Text>
               <Text style={styles.headerProjectTitle} numberOfLines={1}>
                 {workspaceTitle}
@@ -731,7 +736,7 @@ export function NewWorkspaceScreen({
             isPaneFocused={true}
             onSubmitMessage={handleCreateChatAgent}
             allowEmptySubmit={true}
-            submitButtonAccessibilityLabel="Create"
+            submitButtonAccessibilityLabel={t.common.create}
             submitIcon="return"
             isSubmitLoading={pendingAction === "chat"}
             submitBehavior="preserve-and-lock"
@@ -764,8 +769,8 @@ export function NewWorkspaceScreen({
                 value={selectedOptionId}
                 onSelect={handleSelectOption}
                 searchable
-                searchPlaceholder="Search branches and PRs"
-                title="Start from"
+                searchPlaceholder={t.workspace.searchBranchesAndPRs}
+                title={t.workspace.startFrom}
                 open={pickerOpen}
                 onOpenChange={handlePickerOpenChange}
                 onSearchQueryChange={setPickerSearchQuery}

@@ -26,6 +26,7 @@ import {
 import { router, usePathname, type Href } from "expo-router";
 import { navigateToWorkspace } from "@/hooks/use-workspace-navigation";
 import { StyleSheet, withUnistyles } from "react-native-unistyles";
+import { useTranslation } from "@/i18n";
 import type { Theme } from "@/styles/theme";
 import { type GestureType } from "react-native-gesture-handler";
 import * as Clipboard from "expo-clipboard";
@@ -1479,6 +1480,7 @@ function WorkspaceRowWithMenu({
   isCreating?: boolean;
 }) {
   const toast = useToast();
+  const { t } = useTranslation();
   const activeWorkspaceSelection = useActiveWorkspaceSelection();
   const archiveWorktree = useCheckoutGitActionsStore((state) => state.archiveWorktree);
   const [isArchivingWorkspace, setIsArchivingWorkspace] = useState(false);
@@ -1527,13 +1529,13 @@ function WorkspaceRowWithMenu({
           workspaceId: workspace.workspaceId,
           workspaceDirectory: workspace.workspaceDirectory,
         });
-      } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Workspace path not available");
+      } catch {
+        toast.error(t.sidebarWorkspaceList.workspacePathNotAvailable);
         return;
       }
 
       if (!archiveDirectory) {
-        toast.error("Workspace path not available");
+        toast.error(t.sidebarWorkspaceList.workspacePathNotAvailable);
         return;
       }
 
@@ -1548,7 +1550,14 @@ function WorkspaceRowWithMenu({
         toast.error(message);
       });
     })();
-  }, [archiveWorktree, isArchiving, redirectAfterArchive, toast, workspace]);
+  }, [
+    archiveWorktree,
+    isArchiving,
+    redirectAfterArchive,
+    toast,
+    workspace,
+    t.sidebarWorkspaceList.workspacePathNotAvailable,
+  ]);
 
   const handleArchiveWorkspace = useCallback(() => {
     if (isArchivingWorkspace) {
@@ -1569,7 +1578,7 @@ function WorkspaceRowWithMenu({
 
       const client = getHostRuntimeStore().getClient(workspace.serverId);
       if (!client) {
-        toast.error("Host is not connected");
+        toast.error(t.terminalPane.hostNotConnected);
         return;
       }
 
@@ -1583,19 +1592,26 @@ function WorkspaceRowWithMenu({
           if (payload.error) {
             throw new Error(payload.error);
           }
-        } catch (error) {
+        } catch {
           restoreOptimisticallyHiddenWorkspace({
             serverId: workspace.serverId,
             workspaceId: workspace.workspaceId,
             snapshot,
           });
-          toast.error(error instanceof Error ? error.message : "Failed to hide workspace");
+          toast.error(t.sidebarWorkspaceList.failedToHideWorkspace);
         } finally {
           setIsArchivingWorkspace(false);
         }
       })();
     })();
-  }, [isArchivingWorkspace, redirectAfterArchive, toast, workspace]);
+  }, [
+    isArchivingWorkspace,
+    redirectAfterArchive,
+    toast,
+    workspace,
+    t.terminalPane.hostNotConnected,
+    t.sidebarWorkspaceList.failedToHideWorkspace,
+  ]);
 
   const handleCopyPath = useCallback(() => {
     let copyTargetDirectory: string;
@@ -1605,17 +1621,25 @@ function WorkspaceRowWithMenu({
         workspaceDirectory: workspace.workspaceDirectory,
       });
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Workspace path not available");
+      toast.error(
+        error instanceof Error ? error.message : t.sidebarWorkspaceList.workspacePathNotAvailable,
+      );
       return;
     }
     void Clipboard.setStringAsync(copyTargetDirectory);
-    toast.copied("Path copied");
-  }, [toast, workspace.workspaceDirectory, workspace.workspaceId]);
+    toast.copied(t.workspace.workspacePathCopied);
+  }, [
+    toast,
+    workspace.workspaceDirectory,
+    workspace.workspaceId,
+    t.sidebarWorkspaceList.workspacePathNotAvailable,
+    t.workspace.workspacePathCopied,
+  ]);
 
   const handleCopyBranchName = useCallback(() => {
     void Clipboard.setStringAsync(workspace.name);
-    toast.copied("Branch name copied");
-  }, [toast, workspace.name]);
+    toast.copied(t.workspace.branchNameCopied);
+  }, [toast, workspace.name, t.workspace.branchNameCopied]);
 
   const archiveShortcutKeys = useShortcutKeys("archive-worktree");
 
@@ -1684,6 +1708,7 @@ function NonGitProjectRowWithMenuContent({
   dragHandleProps?: DraggableListDragHandleProps;
 }) {
   const toast = useToast();
+  const { t } = useTranslation();
   const contextMenu = useContextMenu();
   const activeWorkspaceSelection = useActiveWorkspaceSelection();
   const [isArchivingWorkspace, setIsArchivingWorkspace] = useState(false);
@@ -1714,7 +1739,7 @@ function NonGitProjectRowWithMenuContent({
 
       const client = getHostRuntimeStore().getClient(workspace.serverId);
       if (!client) {
-        toast.error("Host is not connected");
+        toast.error(t.terminalPane.hostNotConnected);
         return;
       }
 
@@ -1728,19 +1753,26 @@ function NonGitProjectRowWithMenuContent({
           if (payload.error) {
             throw new Error(payload.error);
           }
-        } catch (error) {
+        } catch {
           restoreOptimisticallyHiddenWorkspace({
             serverId: workspace.serverId,
             workspaceId: workspace.workspaceId,
             snapshot,
           });
-          toast.error(error instanceof Error ? error.message : "Failed to hide workspace");
+          toast.error(t.sidebarWorkspaceList.failedToHideWorkspace);
         } finally {
           setIsArchivingWorkspace(false);
         }
       })();
     })();
-  }, [isArchivingWorkspace, redirectAfterArchive, toast, workspace]);
+  }, [
+    isArchivingWorkspace,
+    redirectAfterArchive,
+    toast,
+    workspace,
+    t.terminalPane.hostNotConnected,
+    t.sidebarWorkspaceList.failedToHideWorkspace,
+  ]);
 
   return (
     <>
@@ -2038,6 +2070,7 @@ function ProjectBlock({
   useNestable: boolean;
   creatingWorkspaceIds: ReadonlySet<string>;
 }) {
+  const { t } = useTranslation();
   const rowModel = useMemo(
     () =>
       buildSidebarProjectRowModel({
@@ -2140,7 +2173,7 @@ function ProjectBlock({
 
       const client = getHostRuntimeStore().getClient(serverId);
       if (!client) {
-        toast.error("Host is not connected");
+        toast.error(t.terminalPane.hostNotConnected);
         return;
       }
 
@@ -2172,13 +2205,21 @@ function ProjectBlock({
       ).then((results) => {
         const failed = results.filter(isRejected);
         if (failed.length > 0) {
-          toast.error("Failed to remove some workspaces");
+          toast.error(t.sidebarWorkspaceList.failedToRemoveSomeWorkspaces);
         }
         setIsRemovingProject(false);
         return;
       });
     })();
-  }, [isRemovingProject, serverId, displayName, toast, project.workspaces]);
+  }, [
+    isRemovingProject,
+    serverId,
+    displayName,
+    toast,
+    project.workspaces,
+    t.terminalPane.hostNotConnected,
+    t.sidebarWorkspaceList.failedToRemoveSomeWorkspaces,
+  ]);
 
   const flattenedRowWorkspaceId =
     rowModel.kind === "workspace_link" ? rowModel.workspace.workspaceId : null;
@@ -2275,6 +2316,7 @@ export function SidebarWorkspaceList({
   listFooterComponent,
   parentGestureRef,
 }: SidebarWorkspaceListProps) {
+  const { t } = useTranslation();
   const pathname = usePathname();
   const [creatingWorkspaceIds, setCreatingWorkspaceIds] = useState<Set<string>>(() => new Set());
   const creatingWorkspaceTimeoutsRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(
@@ -2535,10 +2577,10 @@ export function SidebarWorkspaceList({
     <>
       {projects.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyTitle}>No projects yet</Text>
+          <Text style={styles.emptyTitle}>{t.emptyState.noProjects}</Text>
           <Text style={styles.emptyText}>Add a project to get started</Text>
           <Button variant="ghost" size="sm" leftIcon={Plus} onPress={onAddProject}>
-            Add project
+            {t.projects.addProject}
           </Button>
         </View>
       ) : (

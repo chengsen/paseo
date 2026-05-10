@@ -129,12 +129,12 @@ function browserElementWorkspaceAttachment(): Extract<
 }
 
 function createFakePersister(): AttachmentPersister & {
-  blobCalls: Array<{ blob: Blob; mimeType: string; fileName: string | null }>;
-  fileUriCalls: Array<{ uri: string; mimeType: string; fileName: string | null }>;
+  blobCalls: { blob: Blob; mimeType: string; fileName: string | null }[];
+  fileUriCalls: { uri: string; mimeType: string; fileName: string | null }[];
   deletedBatches: AttachmentMetadata[][];
 } {
-  const blobCalls: Array<{ blob: Blob; mimeType: string; fileName: string | null }> = [];
-  const fileUriCalls: Array<{ uri: string; mimeType: string; fileName: string | null }> = [];
+  const blobCalls: { blob: Blob; mimeType: string; fileName: string | null }[] = [];
+  const fileUriCalls: { uri: string; mimeType: string; fileName: string | null }[] = [];
   const deletedBatches: AttachmentMetadata[][] = [];
   return {
     blobCalls,
@@ -159,7 +159,7 @@ interface FakeSendCall {
   text: string;
   options: {
     messageId: string;
-    images: Array<{ data: string; mimeType: string }>;
+    images: { data: string; mimeType: string }[];
     attachments: AgentAttachment[];
   };
 }
@@ -525,7 +525,7 @@ describe("editQueuedComposerMessage", () => {
 describe("sendQueuedComposerMessageNow", () => {
   it("returns missing without submitting when the message id is gone", async () => {
     const queue = createFakeQueue();
-    const submitted: Array<{ text: string; attachments: ComposerAttachment[] }> = [];
+    const submitted: { text: string; attachments: ComposerAttachment[] }[] = [];
     const result = await sendQueuedComposerMessageNow({
       agentId: "agent",
       messageId: "msg-1",
@@ -543,7 +543,7 @@ describe("sendQueuedComposerMessageNow", () => {
     const queue = createFakeQueue(
       new Map([["agent", [{ id: "msg-1", text: "send me", attachments: [review] }]]]),
     );
-    const submitted: Array<{ text: string; attachments: ComposerAttachment[] }> = [];
+    const submitted: { text: string; attachments: ComposerAttachment[] }[] = [];
     const result = await sendQueuedComposerMessageNow({
       agentId: "agent",
       messageId: "msg-1",

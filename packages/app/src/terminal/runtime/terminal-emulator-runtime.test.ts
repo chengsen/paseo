@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { TerminalEmulatorRuntime } from "./terminal-emulator-runtime";
+
 vi.mock("@xterm/addon-clipboard", () => ({
   ClipboardAddon: class ClipboardAddon {
     dispose(): void {}
@@ -55,8 +57,6 @@ vi.mock("@xterm/xterm", () => ({
   },
 }));
 
-import { TerminalEmulatorRuntime } from "./terminal-emulator-runtime";
-
 interface StubTerminal {
   write: (text: string, callback?: () => void) => void;
   reset: () => void;
@@ -73,11 +73,11 @@ function createRuntimeWithTerminal(): {
   terminal: StubTerminal & {
     resetCalls: number;
   };
-  writeCallbacks: Array<() => void>;
+  writeCallbacks: (() => void)[];
   writeTexts: string[];
 } {
   const runtime = new TerminalEmulatorRuntime();
-  const writeCallbacks: Array<() => void> = [];
+  const writeCallbacks: (() => void)[] = [];
   const writeTexts: string[] = [];
   let resetCalls = 0;
 

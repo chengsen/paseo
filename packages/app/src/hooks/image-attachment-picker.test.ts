@@ -1,5 +1,10 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
+import {
+  normalizePickedImageAssets,
+  openImagePathsWithDesktopDialog,
+} from "./image-attachment-picker";
+
 const desktopHostState = vi.hoisted(() => ({
   api: null as unknown,
 }));
@@ -7,11 +12,6 @@ const desktopHostState = vi.hoisted(() => ({
 vi.mock("@/desktop/host", () => ({
   getDesktopHost: () => desktopHostState.api,
 }));
-
-import {
-  normalizePickedImageAssets,
-  openImagePathsWithDesktopDialog,
-} from "./image-attachment-picker";
 
 describe("image-attachment-picker", () => {
   beforeEach(() => {

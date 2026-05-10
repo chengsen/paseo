@@ -13,6 +13,7 @@ import { measureElement as measureVirtualElement, useVirtualizer } from "@tansta
 import { estimateStreamItemHeight } from "./agent-stream-web-virtualization";
 import type { StreamRenderInput, StreamStrategy, StreamViewportHandle } from "./stream-strategy";
 import { createStreamStrategy } from "./stream-strategy";
+import { useWebElementScrollbar } from "./use-web-scrollbar";
 
 interface CreateWebStreamStrategyInput {
   isMobileBreakpoint: boolean;
@@ -25,7 +26,6 @@ const USER_SCROLL_DELTA_EPSILON = 1;
 const AUTO_SCROLL_BOTTOM_THRESHOLD_PX = 64;
 const AUTO_SCROLL_RESUME_THRESHOLD_PX = 1;
 const HISTORY_START_THRESHOLD_PX = 96;
-import { useWebElementScrollbar } from "./use-web-scrollbar";
 
 const historyStartSlotStyle: CSSProperties = {
   display: "flex",

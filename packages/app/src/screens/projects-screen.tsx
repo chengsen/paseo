@@ -1,4 +1,5 @@
 import { useCallback, useMemo } from "react";
+import { useTranslation } from "@/i18n";
 import { Image, Pressable, Text, View, type PressableStateCallbackType } from "react-native";
 import { router } from "expo-router";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
@@ -15,6 +16,7 @@ interface ProjectsScreenProps {
 }
 
 export default function ProjectsScreen({ view }: ProjectsScreenProps) {
+  const { t } = useTranslation();
   const { projects, hostErrors, isLoading } = useProjects();
   const selectedProjectKey = view.kind === "project" ? view.projectKey : null;
 
@@ -29,7 +31,7 @@ export default function ProjectsScreen({ view }: ProjectsScreenProps) {
   if (projects.length === 0) {
     return (
       <View style={styles.centered} testID="projects-list">
-        <Text style={styles.emptyText}>No projects yet</Text>
+        <Text style={styles.emptyText}>{t.emptyState.noProjects}</Text>
       </View>
     );
   }
@@ -52,11 +54,12 @@ export default function ProjectsScreen({ view }: ProjectsScreenProps) {
 }
 
 function HostErrorsBanner({ errors }: { errors: ProjectHostError[] }) {
+  const { t } = useTranslation();
   return (
     <View style={styles.errorsBanner} testID="projects-host-errors">
       {errors.map((error) => (
         <Text key={error.serverId} style={styles.errorsBannerText}>
-          {`Couldn't load projects from host ${error.serverName}: ${error.message}`}
+          {`${t.projects.couldntLoadProjects} ${error.serverName}: ${error.message}`}
         </Text>
       ))}
     </View>

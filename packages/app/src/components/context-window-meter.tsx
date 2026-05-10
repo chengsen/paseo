@@ -1,6 +1,7 @@
 import { Pressable, Text, View } from "react-native";
 import Svg, { Circle } from "react-native-svg";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
+import { useTranslation } from "@/i18n";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface ContextWindowMeterProps {
@@ -58,6 +59,7 @@ function getMeterColors(
 }
 
 export function ContextWindowMeter({ maxTokens, usedTokens }: ContextWindowMeterProps) {
+  const { t } = useTranslation();
   const { theme } = useUnistyles();
   const percentage = getUsagePercentage(maxTokens, usedTokens);
 
@@ -76,7 +78,10 @@ export function ContextWindowMeter({ maxTokens, usedTokens }: ContextWindowMeter
         <Pressable
           style={styles.container}
           accessibilityRole="image"
-          accessibilityLabel={`Context window ${roundedPercentage}% used`}
+          accessibilityLabel={t.contextWindow.used.replace(
+            "{roundedPercentage}",
+            String(roundedPercentage),
+          )}
         >
           <Svg
             width={SVG_SIZE}
@@ -110,8 +115,10 @@ export function ContextWindowMeter({ maxTokens, usedTokens }: ContextWindowMeter
       </TooltipTrigger>
       <TooltipContent side="top" align="center" offset={8}>
         <View style={styles.tooltipContent}>
-          <Text style={styles.tooltipTitle}>Context window</Text>
-          <Text style={styles.tooltipText}>{`${roundedPercentage}% used`}</Text>
+          <Text style={styles.tooltipTitle}>{t.contextWindow.contextWindow}</Text>
+          <Text style={styles.tooltipText}>
+            {t.contextWindow.used.replace("{roundedPercentage}", String(roundedPercentage))}
+          </Text>
           <Text
             style={styles.tooltipDetail}
           >{`${formatTokenCount(usedTokens)} / ${formatTokenCount(maxTokens)} tokens`}</Text>

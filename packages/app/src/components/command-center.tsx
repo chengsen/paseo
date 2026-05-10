@@ -17,6 +17,7 @@ import { shortenPath } from "@/utils/shorten-path";
 import { AgentStatusDot } from "@/components/agent-status-dot";
 import { Shortcut } from "@/components/ui/shortcut";
 import { isNative } from "@/constants/platform";
+import { useTranslation } from "@/i18n";
 
 function agentKey(agent: Pick<AggregatedAgent, "serverId" | "id">): string {
   return `${agent.serverId}:${agent.id}`;
@@ -171,6 +172,7 @@ interface CommandCenterAgentRowContentProps {
 
 function CommandCenterAgentRowContent({ agent }: CommandCenterAgentRowContentProps) {
   const { theme } = useUnistyles();
+  const { t } = useTranslation();
   const titleStyle = useMemo(
     () => [styles.title, { color: theme.colors.foreground }],
     [theme.colors.foreground],
@@ -191,7 +193,7 @@ function CommandCenterAgentRowContent({ agent }: CommandCenterAgentRowContentPro
         </View>
         <View style={styles.textContent}>
           <Text style={titleStyle} numberOfLines={1}>
-            {agent.title || "New agent"}
+            {agent.title || t.agent.newAgent}
           </Text>
           <Text style={subtitleStyle} numberOfLines={1}>
             {shortenPath(agent.cwd)} · {formatTimeAgo(agent.lastActivityAt)}
@@ -221,10 +223,11 @@ function AgentItemsSection({
   sectionDividerStyle,
   sectionLabelStyle,
 }: AgentItemsSectionProps) {
+  const { t } = useTranslation();
   return (
     <>
       {actionItemsLength > 0 ? <View style={sectionDividerStyle} /> : null}
-      <Text style={sectionLabelStyle}>Agents</Text>
+      <Text style={sectionLabelStyle}>{t.modal.agents}</Text>
       {agentItems.map((item, index) => {
         const rowIndex = actionItemsLength + index;
         const agent = item.agent;
@@ -247,6 +250,7 @@ function AgentItemsSection({
 
 export function CommandCenter() {
   const { theme } = useUnistyles();
+  const { t } = useTranslation();
   const { open, inputRef, query, setQuery, activeIndex, items, handleClose, handleSelectItem } =
     useCommandCenter();
 
@@ -336,7 +340,7 @@ export function CommandCenter() {
               ref={inputRef}
               value={query}
               onChangeText={setQuery}
-              placeholder="Type a command or search agents..."
+              placeholder={t.modal.typeCommandOrSearch}
               placeholderTextColor={theme.colors.foregroundMuted}
               style={inputStyle}
               autoCapitalize="none"
@@ -353,12 +357,12 @@ export function CommandCenter() {
             showsVerticalScrollIndicator={false}
           >
             {items.length === 0 ? (
-              <Text style={emptyTextStyle}>No matches</Text>
+              <Text style={emptyTextStyle}>{t.modal.noMatches}</Text>
             ) : (
               <>
                 {actionItems.length > 0 ? (
                   <>
-                    <Text style={sectionLabelStyle}>Actions</Text>
+                    <Text style={sectionLabelStyle}>{t.modal.actions}</Text>
                     {actionItems.map((item, index) => (
                       <CommandCenterActionRow
                         key={`action:${item.action.id}`}

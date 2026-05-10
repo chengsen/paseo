@@ -5,6 +5,13 @@ import React, { act, useEffect } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import {
+  SidebarCalloutProvider,
+  type SidebarCalloutsApi,
+  SidebarCalloutViewport,
+  useSidebarCallouts,
+} from "./sidebar-callout-context";
+
 const { theme } = vi.hoisted(() => ({
   theme: {
     spacing: { 0: 0, 1: 4, 2: 8, 3: 12, 4: 16 },
@@ -49,13 +56,6 @@ vi.mock("lucide-react-native", () => {
 
 vi.stubGlobal("React", React);
 vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
-
-import {
-  SidebarCalloutProvider,
-  type SidebarCalloutsApi,
-  SidebarCalloutViewport,
-  useSidebarCallouts,
-} from "./sidebar-callout-context";
 
 const apiSink: { current: SidebarCalloutsApi | null } = { current: null };
 

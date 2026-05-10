@@ -29,6 +29,7 @@ import Animated, { Keyframe, runOnJS } from "react-native-reanimated";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
 import { Check, CheckCircle } from "lucide-react-native";
 import { isWeb } from "@/constants/platform";
+import { useTranslation } from "@/i18n";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useWebScrollbarStyle } from "@/hooks/use-web-scrollbar-style";
 
@@ -394,6 +395,7 @@ export function DropdownMenuContent({
 }>): ReactElement | null {
   const { open, setOpen, triggerRef, flushPendingSelect } =
     useDropdownMenuContext("DropdownMenuContent");
+  const { t } = useTranslation();
   const [modalVisible, setModalVisible] = useState(false);
   const webScrollbarStyle = useWebScrollbarStyle();
   const [closing, setClosing] = useState(false);
@@ -576,7 +578,7 @@ export function DropdownMenuContent({
       <View style={styles.overlay}>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Menu backdrop"
+          accessibilityLabel={t.menuBackdrop.menuBackdrop}
           style={styles.backdrop}
           onPress={handleClose}
           testID={testID ? `${testID}-backdrop` : undefined}

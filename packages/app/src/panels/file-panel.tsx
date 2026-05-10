@@ -5,6 +5,7 @@ import { FilePane } from "@/components/file-pane";
 import { usePaneContext } from "@/panels/pane-context";
 import type { PanelRegistration } from "@/panels/panel-registry";
 import { useWorkspaceExecutionAuthority } from "@/stores/session-store-hooks";
+import { useTranslation } from "@/i18n";
 
 const CENTERED_PADDED_STYLE = {
   flex: 1,
@@ -25,6 +26,7 @@ function useFilePanelDescriptor(target: { kind: "file"; path: string }) {
 }
 
 function FilePanel() {
+  const { t } = useTranslation();
   const { serverId, workspaceId, target } = usePaneContext();
   const workspaceAuthority = useWorkspaceExecutionAuthority(serverId, workspaceId);
   const workspaceDirectory = workspaceAuthority?.ok
@@ -34,7 +36,7 @@ function FilePanel() {
   if (!workspaceDirectory) {
     return (
       <View style={CENTERED_PADDED_STYLE}>
-        <Text>Workspace execution directory not found.</Text>
+        <Text>{t.workspace.workspaceExecutionDirectoryNotFound}</Text>
       </View>
     );
   }

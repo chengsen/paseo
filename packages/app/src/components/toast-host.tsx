@@ -3,15 +3,16 @@ import { createPortal } from "react-dom";
 import { Animated, Easing, Platform, Text, ToastAndroid, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
-import { useIsCompactFormFactor } from "@/constants/layout";
-import { isWeb } from "@/constants/platform";
-import { AlertTriangle, CheckCircle2 } from "lucide-react-native";
-import { getOverlayRoot, OVERLAY_Z } from "@/lib/overlay-root";
 import {
+  useIsCompactFormFactor,
   HEADER_INNER_HEIGHT,
   HEADER_INNER_HEIGHT_MOBILE,
   HEADER_TOP_PADDING_MOBILE,
 } from "@/constants/layout";
+import { isWeb } from "@/constants/platform";
+import { AlertTriangle, CheckCircle2 } from "lucide-react-native";
+import { getOverlayRoot, OVERLAY_Z } from "@/lib/overlay-root";
+import { useTranslation } from "@/i18n";
 
 export type ToastVariant = "default" | "success" | "error";
 
@@ -49,6 +50,7 @@ export function useToastHost(): {
   dismiss: () => void;
 } {
   const { theme } = useUnistyles();
+  const { t } = useTranslation();
   const [toast, setToast] = useState<ToastState | null>(null);
   const idRef = useRef(0);
 
@@ -85,13 +87,13 @@ export function useToastHost(): {
     () => ({
       show,
       copied: (label?: string) =>
-        show(label ? `Copied ${label}` : "Copied", {
+        show(label ? t.toast.copiedWithLabel.replace("{label}", label) : t.toast.copied, {
           variant: "success",
           icon: <CheckCircle2 size={18} color={theme.colors.foreground} />,
         }),
       error: (message: string) => show(message, { variant: "error", durationMs: 3200 }),
     }),
-    [show, theme.colors.foreground],
+    [show, t.toast.copied, t.toast.copiedWithLabel, theme.colors.foreground],
   );
 
   const dismiss = useCallback(() => {

@@ -20,11 +20,14 @@ import {
   type WorkspaceSetupSnapshot,
 } from "@/stores/workspace-setup-store";
 import { useHostRuntimeClient } from "@/runtime/host-runtime";
+import { useTranslation } from "@/i18n";
+import type { Translation } from "@/i18n/translations/en";
 
 function useSetupPanelDescriptor(
   target: { kind: "setup"; workspaceId: string },
   context: { serverId: string; workspaceId: string },
 ): PanelDescriptor {
+  const { t } = useTranslation();
   const key = buildWorkspaceTabPersistenceKey({
     serverId: context.serverId,
     workspaceId: target.workspaceId,
@@ -33,8 +36,8 @@ function useSetupPanelDescriptor(
 
   if (snapshot?.status === "completed") {
     return {
-      label: "Setup",
-      subtitle: "Setup completed",
+      label: t.workspace.setup,
+      subtitle: t.workspace.setupCompleted,
       titleState: "ready",
       icon: CheckCircle2,
       statusBucket: null,
@@ -43,8 +46,8 @@ function useSetupPanelDescriptor(
 
   if (snapshot?.status === "failed") {
     return {
-      label: "Setup",
-      subtitle: "Setup failed",
+      label: t.workspace.setup,
+      subtitle: t.workspace.setupFailed,
       titleState: "ready",
       icon: CircleAlert,
       statusBucket: null,
@@ -52,8 +55,8 @@ function useSetupPanelDescriptor(
   }
 
   return {
-    label: "Setup",
-    subtitle: "Workspace setup",
+    label: t.workspace.setup,
+    subtitle: t.workspace.workspaceSetup,
     titleState: "ready",
     icon: SquareTerminal,
     statusBucket: snapshot?.status === "running" ? "running" : null,
@@ -108,11 +111,14 @@ function resolveAutoExpandIndex(commands: { index: number; status: string }[]): 
   return null;
 }
 
-function resolveSetupStatusLabel(status: string | undefined): string {
-  if (status === "running") return "Running";
-  if (status === "completed") return "Completed";
-  if (status === "failed") return "Failed";
-  return "Waiting for setup output";
+function resolveSetupStatusLabel(
+  status: string | undefined,
+  t: Pick<Translation, "status" | "workspace">,
+): string {
+  if (status === "running") return t.status.running;
+  if (status === "completed") return t.status.completed;
+  if (status === "failed") return t.status.failed;
+  return t.workspace.waitingForSetupOutput;
 }
 
 function resolveCommandLog(
@@ -150,6 +156,7 @@ function buildCommandRowState(args: BuildCommandRowPropsArgs) {
 }
 
 function SetupPanel() {
+  const { t } = useTranslation();
   const { serverId, target } = usePaneContext();
   invariant(target.kind === "setup", "SetupPanel requires setup target");
 
@@ -214,7 +221,7 @@ function SetupPanel() {
   }, []);
 
   const autoExpandIndex = resolveAutoExpandIndex(commands);
-  const statusLabel = resolveSetupStatusLabel(snapshot?.status);
+  const statusLabel = resolveSetupStatusLabel(snapshot?.status, t);
 
   return (
     <ScrollView
@@ -230,7 +237,7 @@ function SetupPanel() {
       {isWaiting ? (
         <View style={styles.waitingContainer}>
           <ThemedActivityIndicator size="large" uniProps={foregroundMutedColorMapping} />
-          <Text style={styles.waitingText}>Setting up workspace...</Text>
+          <Text style={styles.waitingText}>{t.workspace.settingUpWorkspace}</Text>
         </View>
       ) : null}
       {!isWaiting && hasNoSetupCommands ? (
@@ -238,9 +245,9 @@ function SetupPanel() {
           <Text
             style={styles.emptyText}
             accessible
-            accessibilityLabel="No setup commands ran for this workspace"
+            accessibilityLabel={t.workspace.noSetupCommandsRan}
           >
-            No setup commands ran for this workspace.
+            {t.workspace.noSetupCommandsRan}
           </Text>
         </View>
       ) : null}
@@ -268,11 +275,12 @@ function SetupPanel() {
                 processedLog={rowState.processedLog}
                 errorMessage={snapshot?.error ?? null}
                 onToggle={toggleExpanded}
+                t={t}
               />
             );
           })}
 
-          <StandaloneLogView commands={commands} log={log} />
+          <StandaloneLogView commands={commands} log={log} t={t} />
           <TopLevelSetupError snapshotError={snapshot?.error ?? null} commands={commands} />
         </View>
       ) : null}
@@ -302,7 +310,8 @@ function SetupCommandRow({
   processedLog,
   errorMessage,
   onToggle,
-}: SetupCommandRowProps) {
+  t,
+}: SetupCommandRowProps & { t: Pick<Translation, "workspace" | "setupPanel"> }) {
   const handlePress = useCallback(() => {
     if (!isExpandable) return;
     onToggle(command.index, isAutoExpanded);
@@ -348,7 +357,7 @@ function SetupCommandRow({
               showsVerticalScrollIndicator
               testID="workspace-setup-log"
               accessible
-              accessibilityLabel="Workspace setup log"
+              accessibilityLabel={t.setupPanel.workspaceSetupLog}
             >
               <Text selectable style={styles.logText}>
                 {processedLog}
@@ -359,9 +368,9 @@ function SetupCommandRow({
               style={styles.logScrollContent}
               testID="workspace-setup-log"
               accessible
-              accessibilityLabel="Workspace setup log"
+              accessibilityLabel={t.setupPanel.workspaceSetupLog}
             >
-              <Text style={styles.emptyLogText}>No output</Text>
+              <Text style={styles.emptyLogText}>{t.workspace.noOutput}</Text>
             </View>
           )}
           {hasError && errorMessage ? (
@@ -393,7 +402,15 @@ function SetupCommandChevron({ showDetail }: { showDetail: boolean }) {
   );
 }
 
-function StandaloneLogView({ commands, log }: { commands: SetupCommand[]; log: string }) {
+function StandaloneLogView({
+  commands,
+  log,
+  t,
+}: {
+  commands: SetupCommand[];
+  log: string;
+  t: Pick<Translation, "setupPanel">;
+}) {
   if (commands.length !== 0 || log.trim().length === 0) return null;
   return (
     <ScrollView
@@ -402,7 +419,7 @@ function StandaloneLogView({ commands, log }: { commands: SetupCommand[]; log: s
       showsVerticalScrollIndicator
       testID="workspace-setup-log"
       accessible
-      accessibilityLabel="Workspace setup log"
+      accessibilityLabel={t.setupPanel.workspaceSetupLog}
     >
       <Text selectable style={styles.logText}>
         {log}

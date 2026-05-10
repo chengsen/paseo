@@ -9,22 +9,6 @@ import { createRoot, type Root } from "react-dom/client";
 import React from "react";
 import type { ReactElement } from "react";
 
-vi.hoisted(() => {
-  (globalThis as unknown as { __DEV__: boolean }).__DEV__ = false;
-});
-
-const pathnameState = vi.hoisted(() => ({
-  value: "/",
-}));
-
-vi.mock("expo-router", () => ({
-  router: {
-    dismissTo: vi.fn(),
-  },
-  useLocalSearchParams: () => ({}),
-  usePathname: () => pathnameState.value,
-}));
-
 import {
   createSidebarWorkspaceEntry,
   type SidebarProjectEntry,
@@ -41,6 +25,22 @@ import { useSessionStore, type WorkspaceDescriptor } from "@/stores/session-stor
 import { useSidebarOrderStore } from "@/stores/sidebar-order-store";
 import { useWorkspaceFields } from "@/stores/session-store-hooks";
 import { useActiveWorkspaceSelection } from "@/stores/navigation-active-workspace-store";
+
+vi.hoisted(() => {
+  (globalThis as unknown as { __DEV__: boolean }).__DEV__ = false;
+});
+
+const pathnameState = vi.hoisted(() => ({
+  value: "/",
+}));
+
+vi.mock("expo-router", () => ({
+  router: {
+    dismissTo: vi.fn(),
+  },
+  useLocalSearchParams: () => ({}),
+  usePathname: () => pathnameState.value,
+}));
 
 vi.mock("@react-native-async-storage/async-storage", () => ({
   default: {

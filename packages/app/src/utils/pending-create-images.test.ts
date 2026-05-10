@@ -6,13 +6,13 @@ import type { AgentAttachment } from "@server/shared/messages";
 function userMessage(params: {
   id: string;
   text: string;
-  images?: Array<{
+  images?: {
     id: string;
     storageType: "native-file";
     storageKey: string;
     mimeType: string;
     createdAt: number;
-  }>;
+  }[];
   attachments?: AgentAttachment[];
 }): StreamItem {
   return {

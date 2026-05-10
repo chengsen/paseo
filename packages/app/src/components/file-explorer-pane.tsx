@@ -45,12 +45,7 @@ import { formatTimeAgo } from "@/utils/time";
 import { buildAbsoluteExplorerPath } from "@/utils/explorer-paths";
 import { useWebScrollViewScrollbar } from "@/components/use-web-scrollbar";
 import { isWeb } from "@/constants/platform";
-
-const SORT_OPTIONS: { value: SortOption; label: string }[] = [
-  { value: "name", label: "Name" },
-  { value: "modified", label: "Modified" },
-  { value: "size", label: "Size" },
-];
+import { useTranslation } from "@/i18n";
 
 const INDENT_PER_LEVEL = 16;
 
@@ -115,6 +110,7 @@ function TreeRowItem({
   onCopyPath,
   onDownloadEntry,
 }: TreeRowItemProps) {
+  const { t } = useTranslation();
   const { theme } = useUnistyles();
   const isDirectory = entry.kind === "directory";
 
@@ -182,7 +178,7 @@ function TreeRowItem({
           <View style={styles.contextMetaBlock}>
             <View style={styles.contextMetaRow}>
               <Text style={styles.contextMetaLabel} numberOfLines={1}>
-                Size
+                {t.workspace.size}
               </Text>
               <Text style={styles.contextMetaValue} numberOfLines={1} ellipsizeMode="tail">
                 {formatFileSize({ size: entry.size })}
@@ -190,7 +186,7 @@ function TreeRowItem({
             </View>
             <View style={styles.contextMetaRow}>
               <Text style={styles.contextMetaLabel} numberOfLines={1}>
-                Modified
+                {t.workspace.modified}
               </Text>
               <Text style={styles.contextMetaValue} numberOfLines={1} ellipsizeMode="tail">
                 {formatTimeAgo(new Date(entry.modifiedAt))}
@@ -199,11 +195,11 @@ function TreeRowItem({
           </View>
           <DropdownMenuSeparator />
           <DropdownMenuItem leading={copyLeading} onSelect={handleCopy}>
-            Copy path
+            {t.workspace.copyPath}
           </DropdownMenuItem>
           {entry.kind === "file" ? (
             <DropdownMenuItem leading={downloadLeading} onSelect={handleDownload}>
-              Download
+              {t.workspace.download}
             </DropdownMenuItem>
           ) : null}
         </DropdownMenuContent>
@@ -230,6 +226,7 @@ export function FileExplorerPane({
   workspaceRoot,
   onOpenFile,
 }: FileExplorerPaneProps) {
+  const { t } = useTranslation();
   const isMobile = useIsCompactFormFactor();
   const showDesktopWebScrollbar = isWeb && !isMobile;
 
@@ -371,11 +368,20 @@ export function FileExplorerPane({
     [daemonProfile, requestFileDownloadToken, serverId, startDownload, workspaceScopeId],
   );
 
+  const sortOptions = useMemo(
+    () => [
+      { value: "name" as SortOption, label: t.fileExplorer.sortName },
+      { value: "modified" as SortOption, label: t.fileExplorer.sortModified },
+      { value: "size" as SortOption, label: t.fileExplorer.sortSize },
+    ],
+    [t],
+  );
+
   const handleSortCycle = useCallback(() => {
-    const currentIndex = SORT_OPTIONS.findIndex((opt) => opt.value === sortOption);
-    const nextIndex = (currentIndex + 1) % SORT_OPTIONS.length;
-    setSortOption(SORT_OPTIONS[nextIndex].value);
-  }, [sortOption, setSortOption]);
+    const currentIndex = sortOptions.findIndex((opt) => opt.value === sortOption);
+    const nextIndex = (currentIndex + 1) % sortOptions.length;
+    setSortOption(sortOptions[nextIndex].value);
+  }, [sortOption, setSortOption, sortOptions]);
 
   const refreshExplorer = useCallback(
     () =>
@@ -396,7 +402,7 @@ export function FileExplorerPane({
     void refetchExplorer();
   }, [refetchExplorer]);
 
-  const currentSortLabel = resolveCurrentSortLabel(sortOption);
+  const currentSortLabel = resolveCurrentSortLabel(sortOption, sortOptions);
 
   const treeRows = useMemo(
     () => resolveTreeRows({ directories, expandedPaths, sortOption }),
@@ -454,7 +460,7 @@ export function FileExplorerPane({
   if (!hasWorkspaceScope) {
     return (
       <View style={styles.centerState}>
-        <Text style={styles.errorText}>Workspace is unavailable</Text>
+        <Text style={styles.errorText}>{t.workspace.workspaceUnavailable}</Text>
       </View>
     );
   }
@@ -503,6 +509,7 @@ interface FileExplorerPaneContentProps {
 }
 
 function FileExplorerPaneContent(props: FileExplorerPaneContentProps) {
+  const { t } = useTranslation();
   const { theme } = useUnistyles();
   const {
     error,
@@ -530,11 +537,11 @@ function FileExplorerPaneContent(props: FileExplorerPaneContentProps) {
         <View style={styles.errorActions}>
           {showBackFromError ? (
             <Pressable style={styles.retryButton} onPress={handleBackFromError}>
-              <Text style={styles.retryButtonText}>Back</Text>
+              <Text style={styles.retryButtonText}>{t.workspace.back}</Text>
             </Pressable>
           ) : null}
           <Pressable style={styles.retryButton} onPress={handleRetry}>
-            <Text style={styles.retryButtonText}>Retry</Text>
+            <Text style={styles.retryButtonText}>{t.workspace.retry}</Text>
           </Pressable>
         </View>
       </View>
@@ -545,7 +552,7 @@ function FileExplorerPaneContent(props: FileExplorerPaneContentProps) {
     return (
       <View style={styles.centerState}>
         <ActivityIndicator size="small" />
-        <Text style={styles.loadingText}>Loading files…</Text>
+        <Text style={styles.loadingText}>{t.workspace.loadingFiles}</Text>
       </View>
     );
   }
@@ -553,7 +560,7 @@ function FileExplorerPaneContent(props: FileExplorerPaneContentProps) {
   if (treeRows.length === 0) {
     return (
       <View style={styles.centerState}>
-        <Text style={styles.emptyText}>No files</Text>
+        <Text style={styles.emptyText}>{t.workspace.noFiles}</Text>
       </View>
     );
   }
@@ -571,7 +578,9 @@ function FileExplorerPaneContent(props: FileExplorerPaneContentProps) {
           hitSlop={8}
           style={iconButtonStyleProp}
           accessibilityRole="button"
-          accessibilityLabel={isRefreshFetching ? "Refreshing files" : "Refresh files"}
+          accessibilityLabel={
+            isRefreshFetching ? t.fileExplorer.refreshingFiles : t.fileExplorer.refreshFiles
+          }
         >
           <View style={styles.refreshIcon}>
             {isRefreshFetching ? (
@@ -705,8 +714,11 @@ function resolveShowInitialLoading({
   );
 }
 
-function resolveCurrentSortLabel(sortOption: SortOption): string {
-  return SORT_OPTIONS.find((opt) => opt.value === sortOption)?.label ?? "Name";
+function resolveCurrentSortLabel(
+  sortOption: SortOption,
+  sortOptions: { value: SortOption; label: string }[],
+): string {
+  return sortOptions.find((opt) => opt.value === sortOption)?.label ?? sortOptions[0]?.label ?? "";
 }
 
 function resolveTreeRows({

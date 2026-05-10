@@ -1,5 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import {
+  buildExplorerCheckoutKey,
+  resolveExplorerTabForCheckout,
+  type ExplorerTab,
+} from "@/stores/explorer-tab-memory";
+import {
+  selectIsAgentListOpen,
+  selectIsFileExplorerOpen,
+  selectPanelVisibility,
+  usePanelStore,
+  type PanelState,
+} from "@/stores/panel-store";
+
 vi.mock("@react-native-async-storage/async-storage", () => {
   const storage = new Map<string, string>();
   return {
@@ -14,19 +27,6 @@ vi.mock("@react-native-async-storage/async-storage", () => {
     },
   };
 });
-
-import {
-  buildExplorerCheckoutKey,
-  resolveExplorerTabForCheckout,
-  type ExplorerTab,
-} from "@/stores/explorer-tab-memory";
-import {
-  selectIsAgentListOpen,
-  selectIsFileExplorerOpen,
-  selectPanelVisibility,
-  usePanelStore,
-  type PanelState,
-} from "@/stores/panel-store";
 
 function resetPanelStore() {
   usePanelStore.setState({

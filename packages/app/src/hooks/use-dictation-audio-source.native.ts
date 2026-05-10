@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef } from "react";
-import { Buffer } from "buffer";
 import { useState } from "react";
 
+import { uint8ArrayToBase64 } from "@/utils/base64";
 import { createAudioEngine } from "@/voice/audio-engine";
 
 import type {
@@ -22,7 +22,7 @@ export function useDictationAudioSource(config: DictationAudioSourceConfig): Dic
 
     engineRef.current = createAudioEngine({
       onCaptureData: (pcm) => {
-        onPcmSegmentRef.current(Buffer.from(pcm).toString("base64"));
+        onPcmSegmentRef.current(uint8ArrayToBase64(pcm));
       },
       onVolumeLevel: (level) => {
         setVolume(level);

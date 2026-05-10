@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
 const daemonClientMock = vi.hoisted(() => {
-  const createdConfigs: Array<{ clientId?: string; url?: string; password?: string }> = [];
+  const createdConfigs: { clientId?: string; url?: string; password?: string }[] = [];
   let nextConnectError: Error | null = null;
   let nextLastError: string | null = null;
 

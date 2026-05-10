@@ -11,6 +11,7 @@ import {
   buildKeyboardShortcutHelpSections,
   getBindingIdForAction,
   type KeyboardShortcutHelpRow,
+  type KeyboardShortcutHelpSection,
 } from "@/keyboard/keyboard-shortcuts";
 import {
   chordStringToShortcutKeys,
@@ -22,15 +23,20 @@ import { useKeyboardShortcutsStore } from "@/stores/keyboard-shortcuts-store";
 import { getShortcutOs } from "@/utils/shortcut-platform";
 import { getIsElectronRuntime } from "@/constants/layout";
 import { isNative } from "@/constants/platform";
+import { useTranslation } from "@/i18n";
+import type { ShortcutSectionId } from "@/keyboard/keyboard-shortcuts";
+import type { Translation } from "@/i18n/translations/en";
 
 const EMPTY_CAPTURED_COMBOS: string[] = [];
 
 function ShortcutSequence({
   chord,
   heldModifiers,
+  pressShortcutLabel,
 }: {
   chord: string[] | null;
   heldModifiers: string | null;
+  pressShortcutLabel: string;
 }) {
   const displayChord = useMemo(() => {
     const combos = [...(chord ?? [])];
@@ -41,7 +47,7 @@ function ShortcutSequence({
   }, [chord, heldModifiers]);
 
   if ((!chord || chord.length === 0) && !heldModifiers) {
-    return <Text style={styles.capturingText}>Press shortcut...</Text>;
+    return <Text style={styles.capturingText}>{pressShortcutLabel}</Text>;
   }
 
   return <Shortcut chord={displayChord} />;
@@ -54,6 +60,7 @@ interface ShortcutRowContainerProps {
   isCapturing: boolean;
   capturedCombos: string[];
   heldModifiers: string | null;
+  t: Translation;
   onStartCapture: (bindingId: string) => void;
   onSaveCapture: () => void;
   onCancelCapture: () => void;
@@ -67,6 +74,7 @@ function ShortcutRowContainer({
   isCapturing,
   capturedCombos,
   heldModifiers,
+  t,
   onStartCapture,
   onSaveCapture,
   onCancelCapture,
@@ -88,6 +96,7 @@ function ShortcutRowContainer({
       isCapturing={isCapturing}
       capturedCombos={capturedCombos}
       heldModifiers={heldModifiers}
+      t={t}
       onRebind={handleRebind}
       onDone={onSaveCapture}
       onCancel={onCancelCapture}
@@ -103,6 +112,7 @@ function ShortcutRow({
   isCapturing,
   capturedCombos,
   heldModifiers,
+  t,
   onRebind,
   onDone,
   onCancel,
@@ -114,6 +124,7 @@ function ShortcutRow({
   isCapturing: boolean;
   capturedCombos: string[];
   heldModifiers: string | null;
+  t: Translation;
   onRebind: () => void;
   onDone: () => void;
   onCancel: () => void;
@@ -130,7 +141,11 @@ function ShortcutRow({
       <Text style={styles.rowLabel}>{row.label}</Text>
       <View style={styles.rowActions}>
         {isCapturing ? (
-          <ShortcutSequence chord={capturedCombos} heldModifiers={heldModifiers} />
+          <ShortcutSequence
+            chord={capturedCombos}
+            heldModifiers={heldModifiers}
+            pressShortcutLabel={t.shortcuts.pressShortcut}
+          />
         ) : (
           <Shortcut chord={displayChord} />
         )}
@@ -138,17 +153,17 @@ function ShortcutRow({
           <>
             {isCapturing && capturedCombos.length > 0 ? (
               <Button variant="ghost" size="sm" onPress={onDone}>
-                Done
+                {t.common.done}
               </Button>
             ) : null}
             <Button variant="ghost" size="sm" onPress={isCapturing ? onCancel : onRebind}>
-              {isCapturing ? "Cancel" : "Rebind"}
+              {isCapturing ? t.common.cancel : t.shortcuts.rebind}
             </Button>
           </>
         )}
         {overrideCombo !== undefined && !isCapturing && (
           <Button variant="ghost" size="sm" onPress={onReset}>
-            <Text style={styles.resetText}>Reset</Text>
+            <Text style={styles.resetText}>{t.common.reset}</Text>
           </Button>
         )}
       </View>
@@ -157,6 +172,7 @@ function ShortcutRow({
 }
 
 export function KeyboardShortcutsSection() {
+  const { t } = useTranslation();
   const [capturingBindingId, setCapturingBindingId] = useState<string | null>(null);
   const [capturedCombos, setCapturedCombos] = useState<string[]>([]);
   const [heldModifiers, setHeldModifiers] = useState<string | null>(null);
@@ -167,7 +183,77 @@ export function KeyboardShortcutsSection() {
   const isFocused = useIsFocused();
   const isMac = getShortcutOs() === "mac";
   const isDesktopApp = getIsElectronRuntime();
-  const sections = buildKeyboardShortcutHelpSections({ isMac, isDesktop: isDesktopApp });
+  const sectionTitles = useMemo<Record<ShortcutSectionId, string>>(
+    () => ({
+      navigation: t.shortcuts.sectionNavigation,
+      "tabs-panes": t.shortcuts.sectionTabsPanes,
+      projects: t.shortcuts.sectionProjects,
+      panels: t.shortcuts.sectionPanels,
+      "agent-input": t.shortcuts.sectionAgentInput,
+    }),
+    [t],
+  );
+  const sections = buildKeyboardShortcutHelpSections(
+    { isMac, isDesktop: isDesktopApp },
+    undefined,
+    sectionTitles,
+  );
+
+  const rowLabelMap = useMemo<Record<string, string>>(
+    () => ({
+      "new-agent": t.shortcuts.openProject,
+      "new-worktree": t.shortcuts.newWorktree,
+      "archive-worktree": t.shortcuts.archiveWorktree,
+      "workspace-tab-new": t.shortcuts.newTab,
+      "workspace-tab-close-current": t.shortcuts.closeCurrentTab,
+      "workspace-jump-index": t.shortcuts.jumpToWorkspace,
+      "workspace-tab-jump-index": t.shortcuts.jumpToTab,
+      "workspace-prev": t.shortcuts.previousWorkspace,
+      "workspace-next": t.shortcuts.nextWorkspace,
+      "workspace-tab-prev": t.shortcuts.previousTab,
+      "workspace-tab-next": t.shortcuts.nextTab,
+      "workspace-pane-split-right": t.shortcuts.splitPaneRight,
+      "workspace-pane-split-down": t.shortcuts.splitPaneDown,
+      "workspace-pane-focus-left": t.shortcuts.focusPaneLeft,
+      "workspace-pane-focus-right": t.shortcuts.focusPaneRight,
+      "workspace-pane-focus-up": t.shortcuts.focusPaneUp,
+      "workspace-pane-focus-down": t.shortcuts.focusPaneDown,
+      "workspace-pane-move-tab-left": t.shortcuts.moveTabLeft,
+      "workspace-pane-move-tab-right": t.shortcuts.moveTabRight,
+      "workspace-pane-move-tab-up": t.shortcuts.moveTabUp,
+      "workspace-pane-move-tab-down": t.shortcuts.moveTabDown,
+      "workspace-pane-close": t.shortcuts.closePane,
+      "workspace-terminal-new": t.shortcuts.newTerminal,
+      "toggle-command-center": t.shortcuts.toggleCommandCenter,
+      "show-shortcuts": t.shortcuts.showKeyboardShortcuts,
+      "toggle-left-sidebar": t.shortcuts.toggleLeftSidebar,
+      "toggle-right-sidebar": t.shortcuts.toggleRightSidebar,
+      "toggle-both-sidebars": t.shortcuts.toggleBothSidebars,
+      "toggle-settings": t.shortcuts.toggleSettings,
+      "toggle-focus": t.shortcuts.toggleFocusMode,
+      "cycle-theme": t.shortcuts.cycleTheme,
+      "focus-message-input": t.shortcuts.focusMessageInput,
+      "voice-toggle": t.shortcuts.toggleVoiceMode,
+      "dictation-toggle": t.shortcuts.startStopDictation,
+      "agent-interrupt": t.shortcuts.interruptAgent,
+      "message-input-send": t.shortcuts.sendMessage,
+      "message-input-queue": t.shortcuts.queueMessage,
+      "voice-mute-toggle": t.shortcuts.muteUnmuteVoice,
+    }),
+    [t],
+  );
+
+  const translatedSections = useMemo<KeyboardShortcutHelpSection[]>(
+    () =>
+      sections.map((section) => ({
+        ...section,
+        rows: section.rows.map((row) => ({
+          ...row,
+          label: rowLabelMap[row.id] ?? row.label,
+        })),
+      })),
+    [sections, rowLabelMap],
+  );
 
   const cancelCapture = useCallback(() => {
     setCapturedCombos([]);
@@ -244,9 +330,9 @@ export function KeyboardShortcutsSection() {
 
   if (isNative) {
     return (
-      <SettingsSection title="Shortcuts">
+      <SettingsSection title={t.settings.shortcuts}>
         <View style={mobileCardStyle}>
-          <Text style={styles.mobileText}>Keyboard shortcuts are only available on desktop</Text>
+          <Text style={styles.mobileText}>{t.shortcuts.desktopOnly}</Text>
         </View>
       </SettingsSection>
     );
@@ -254,13 +340,13 @@ export function KeyboardShortcutsSection() {
 
   const resetAllButton = hasOverrides ? (
     <Button variant="ghost" size="sm" onPress={handleResetAll}>
-      Reset all
+      {t.shortcuts.resetAll}
     </Button>
   ) : undefined;
 
   return (
     <>
-      {sections.map(function (section, sectionIndex) {
+      {translatedSections.map(function (section, sectionIndex) {
         return (
           <SettingsSection
             key={section.id}
@@ -286,6 +372,7 @@ export function KeyboardShortcutsSection() {
                         capturingBindingId === bindingId ? capturedCombos : EMPTY_CAPTURED_COMBOS
                       }
                       heldModifiers={capturingBindingId === bindingId ? heldModifiers : null}
+                      t={t}
                       onStartCapture={startCapture}
                       onSaveCapture={saveCapture}
                       onCancelCapture={cancelCapture}

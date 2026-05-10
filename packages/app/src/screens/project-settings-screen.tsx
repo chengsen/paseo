@@ -5,6 +5,7 @@ import { StyleSheet, useUnistyles } from "react-native-unistyles";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, ChevronDown, MoreVertical, Plus } from "lucide-react-native";
 import { useProjectIconQuery } from "@/hooks/use-project-icon-query";
+import { useTranslation } from "@/i18n";
 import type {
   PaseoConfigRaw,
   PaseoConfigRevision,
@@ -41,8 +42,6 @@ import type { ProjectHostEntry, ProjectSummary } from "@/utils/projects";
 const SCRIPT_SERVICE_TYPE = "service";
 
 const ICON_SIZE = 14;
-
-const NO_TARGET_MESSAGE = "We don't have an editable copy of this project on any connected host.";
 
 const HOST_SWITCHER_LABEL = "Switch host";
 
@@ -108,34 +107,36 @@ function navigateBackToProjects() {
 }
 
 function NoEditableTarget() {
+  const { t } = useTranslation();
   return (
     <View style={styles.noTargetContainer}>
       <BackToProjectsButton />
-      <Text style={styles.noTargetText}>{NO_TARGET_MESSAGE}</Text>
+      <Text style={styles.noTargetText}>{t.workspace.noEditableTarget}</Text>
       <Button
         testID="project-settings-back-button"
         onPress={navigateBackToProjects}
         variant="secondary"
         size="md"
       >
-        Back to projects
+        {t.projectSettingsScreen.backToProjects}
       </Button>
     </View>
   );
 }
 
 function BackToProjectsButton() {
+  const { t } = useTranslation();
   return (
     <Button
       testID="project-settings-back-link"
-      accessibilityLabel="Back to projects"
+      accessibilityLabel={t.projectSettingsScreen.backToProjects}
       onPress={navigateBackToProjects}
       variant="ghost"
       size="sm"
       leftIcon={ArrowLeft}
       style={styles.backButton}
     >
-      Back to projects
+      {t.projectSettingsScreen.backToProjects}
     </Button>
   );
 }
@@ -301,12 +302,18 @@ interface ReadFailureCalloutProps {
 }
 
 function ReadFailureCallout({ kind, error, onReload, hasMultipleHosts }: ReadFailureCalloutProps) {
-  const { testID, title, description } = resolveReadFailureCopy({ kind, error, hasMultipleHosts });
+  const { t } = useTranslation();
+  const { testID, title, description } = resolveReadFailureCopy({
+    kind,
+    error,
+    hasMultipleHosts,
+    t,
+  });
   return (
     <View style={styles.errorBlock}>
       <Alert testID={testID} variant="error" title={title} description={description}>
         <Button testID={`${testID}-action-0`} onPress={onReload} variant="outline" size="sm">
-          Reload
+          {t.common.retry}
         </Button>
       </Alert>
     </View>
@@ -317,35 +324,36 @@ function resolveReadFailureCopy(input: {
   kind: ReadFailureCalloutProps["kind"];
   error: unknown;
   hasMultipleHosts: boolean;
+  t: ReturnType<typeof useTranslation>["t"];
 }): { testID: string; title: string; description: string } {
   if (input.kind === "invalid_project_config") {
     return {
       testID: "invalid-callout",
-      title: "paseo.json couldn't be parsed",
-      description: "Fix the file on disk, then reload.",
+      title: input.t.workspace.parseErrorTitle,
+      description: input.t.workspace.parseErrorDescription,
     };
   }
   if (input.kind === "project_not_found") {
     return {
       testID: "project-not-found-callout",
-      title: "This host doesn't have this project",
+      title: input.t.workspace.projectNotFoundTitle,
       description: input.hasMultipleHosts
-        ? "Switch to another host above, or reload."
-        : "The selected host has no record of this project.",
+        ? input.t.workspace.projectNotFoundDescriptionMulti
+        : input.t.workspace.projectNotFoundDescriptionSingle,
     };
   }
   if (input.kind === "transport") {
     const detail = errorToDetail(input.error);
     return {
       testID: "read-transport-callout",
-      title: "Couldn't load paseo.json",
-      description: detail ?? "The host didn't respond.",
+      title: input.t.workspace.loadErrorTitle,
+      description: detail ?? input.t.workspace.hostDidNotRespond,
     };
   }
   return {
     testID: "read-failed-callout",
-    title: "Couldn't load paseo.json",
-    description: "Reload to try again.",
+    title: input.t.workspace.loadErrorTitle,
+    description: input.t.workspace.reloadToTryAgain,
   };
 }
 
@@ -374,6 +382,7 @@ function ProjectConfigForm({
 }: ProjectConfigFormProps) {
   const queryClient = useQueryClient();
   const toast = useToast();
+  const { t } = useTranslation();
 
   const [draft, setDraft] = useState<ProjectConfigDraft>(() => configToDraft(baseConfig));
   const [writeError, setWriteError] = useState<ProjectConfigRpcError | null>(null);
@@ -401,7 +410,7 @@ function ProjectConfigForm({
         });
         setWriteError(null);
         queryClient.invalidateQueries({ queryKey: ["projects"] });
-        toast.show("Project saved", { variant: "success" });
+        toast.show(t.workspace.projectSaved, { variant: "success" });
       } else {
         setWriteError(result.error);
       }
@@ -435,10 +444,10 @@ function ProjectConfigForm({
   const handleRemoveScript = useCallback(
     async (script: ProjectScriptDraft) => {
       const ok = await confirmDialog({
-        title: "Remove script?",
-        message: `Remove ${script.name || "this script"}?`,
-        confirmLabel: "Remove",
-        cancelLabel: "Cancel",
+        title: t.workspace.removeScriptTitle,
+        message: script.name ? `${t.common.remove} ${script.name}?` : t.workspace.removeThisScript,
+        confirmLabel: t.common.remove,
+        cancelLabel: t.common.cancel,
         destructive: true,
       });
       if (!ok) return;
@@ -447,7 +456,7 @@ function ProjectConfigForm({
         scripts: d.scripts.filter((entry) => entry.id !== script.id),
       }));
     },
-    [updateDraft],
+    [t, updateDraft],
   );
 
   const handleEditScript = useCallback((script: ProjectScriptDraft) => {
@@ -509,8 +518,8 @@ function ProjectConfigForm({
   const editingScript = draft.scripts.find((entry) => entry.id === editingScriptId);
 
   const hasInvalidScripts = useMemo(
-    () => draft.scripts.some((script) => validateScript(script).hasErrors),
-    [draft.scripts],
+    () => draft.scripts.some((script) => validateScript(script, t).hasErrors),
+    [draft.scripts, t],
   );
 
   const scriptsTrailing = useMemo(
@@ -520,13 +529,13 @@ function ProjectConfigForm({
         hitSlop={8}
         style={settingsStyles.sectionHeaderLink}
         accessibilityRole="button"
-        accessibilityLabel="Add script"
+        accessibilityLabel={t.projectSettingsScreen.addScript}
         testID="scripts-add-button"
       >
         <Plus size={ICON_SIZE} color={styles.iconColor.color} />
       </Pressable>
     ),
-    [handleAddScript],
+    [handleAddScript, t],
   );
 
   const isStale = writeError?.code === "stale_project_config";
@@ -535,41 +544,45 @@ function ProjectConfigForm({
 
   return (
     <View>
-      <SettingsSection title="Worktree setup" testID="worktree-setup-section">
+      <SettingsSection title={t.workspace.worktreeSetup} testID="worktree-setup-section">
         <View style={settingsStyles.card}>
           <TextInput
             testID="worktree-setup-input"
-            accessibilityLabel="Worktree setup commands"
+            accessibilityLabel={t.projectSettingsScreen.worktreeSetupCommands}
             multiline
             value={draft.setupText}
             onChangeText={handleSetupChange}
-            placeholder="npm install"
+            placeholder={t.projectSettingsScreen.npmInstall}
             placeholderTextColor={styles.placeholderColor.color}
             style={styles.lifecycleInput}
           />
         </View>
       </SettingsSection>
 
-      <SettingsSection title="Worktree teardown" testID="worktree-teardown-section">
+      <SettingsSection title={t.workspace.worktreeTeardown} testID="worktree-teardown-section">
         <View style={settingsStyles.card}>
           <TextInput
             testID="worktree-teardown-input"
-            accessibilityLabel="Worktree teardown commands"
+            accessibilityLabel={t.projectSettingsScreen.worktreeTeardownCommands}
             multiline
             value={draft.teardownText}
             onChangeText={handleTeardownChange}
-            placeholder="docker compose down"
+            placeholder={t.projectSettingsScreen.dockerComposeDown}
             placeholderTextColor={styles.placeholderColor.color}
             style={styles.lifecycleInput}
           />
         </View>
       </SettingsSection>
 
-      <SettingsSection title="Scripts" testID="scripts-section" trailing={scriptsTrailing}>
+      <SettingsSection
+        title={t.workspace.scripts}
+        testID="scripts-section"
+        trailing={scriptsTrailing}
+      >
         <View style={settingsStyles.card} testID="scripts-list">
           {draft.scripts.length === 0 ? (
             <View style={settingsStyles.row}>
-              <Text style={styles.emptyScripts}>No scripts yet.</Text>
+              <Text style={styles.emptyScripts}>{t.emptyState.noScripts}</Text>
             </View>
           ) : (
             draft.scripts.map((script, index) => (
@@ -590,8 +603,8 @@ function ProjectConfigForm({
           <Alert
             testID="stale-callout"
             variant="error"
-            title="Config changed on disk"
-            description="Reload to fetch the latest paseo.json before saving."
+            title={t.workspace.configChangedOnDisk}
+            description={t.workspace.configChangedDescription}
           >
             <Button
               testID="stale-callout-action-0"
@@ -599,7 +612,7 @@ function ProjectConfigForm({
               variant="outline"
               size="sm"
             >
-              Reload
+              {t.common.retry}
             </Button>
           </Alert>
         </View>
@@ -610,8 +623,8 @@ function ProjectConfigForm({
           <Alert
             testID="write-failed-callout"
             variant="error"
-            title="Couldn't save paseo.json"
-            description="Try again, or reload the latest version from disk."
+            title={t.workspace.saveErrorTitle}
+            description={t.workspace.saveErrorDescription}
           >
             <Button
               testID="write-failed-callout-action-0"
@@ -619,7 +632,7 @@ function ProjectConfigForm({
               variant="outline"
               size="sm"
             >
-              Try again
+              {t.common.retry}
             </Button>
             <Button
               testID="write-failed-callout-action-1"
@@ -627,7 +640,7 @@ function ProjectConfigForm({
               variant="outline"
               size="sm"
             >
-              Reload
+              {t.common.retry}
             </Button>
           </Alert>
         </View>
@@ -636,14 +649,14 @@ function ProjectConfigForm({
       <View style={styles.footer}>
         <Button
           testID="save-button"
-          accessibilityLabel="Save project config"
+          accessibilityLabel={t.projectSettingsScreen.saveProjectConfig}
           variant="default"
           size="md"
           disabled={saveDisabled}
           loading={saveMutation.isPending}
           onPress={handleSave}
         >
-          {saveMutation.isPending ? "Saving…" : "Save"}
+          {saveMutation.isPending ? t.common.saving : t.common.save}
         </Button>
       </View>
 
@@ -775,6 +788,7 @@ interface ScriptRowProps {
 }
 
 function ScriptRow({ script, isFirst, onEdit, onRemove }: ScriptRowProps) {
+  const { t } = useTranslation();
   const handleEdit = useCallback(() => onEdit(script), [onEdit, script]);
   const handleRemove = useCallback(() => onRemove(script), [onRemove, script]);
   const rowStyle = isFirst ? styles.scriptRow : styles.scriptRowWithBorder;
@@ -783,7 +797,7 @@ function ScriptRow({ script, isFirst, onEdit, onRemove }: ScriptRowProps) {
     <View style={rowStyle} testID={`script-row-${script.id}`}>
       <Pressable style={styles.scriptRowMain} onPress={handleEdit}>
         <Text style={settingsStyles.rowTitle} numberOfLines={1}>
-          {script.name || "Untitled script"}
+          {script.name || t.workspace.untitledScript}
         </Text>
         <Text style={settingsStyles.rowHint} numberOfLines={1}>
           {scriptHint(script)}
@@ -791,7 +805,7 @@ function ScriptRow({ script, isFirst, onEdit, onRemove }: ScriptRowProps) {
       </Pressable>
       <DropdownMenu>
         <DropdownMenuTrigger
-          accessibilityLabel="Open script menu"
+          accessibilityLabel={t.projectSettingsScreen.openScriptMenu}
           testID={`script-row-menu-${script.id}`}
           style={styles.scriptKebab}
         >
@@ -799,14 +813,14 @@ function ScriptRow({ script, isFirst, onEdit, onRemove }: ScriptRowProps) {
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" minWidth={160}>
           <DropdownMenuItem testID={`script-action-${script.id}-edit`} onSelect={handleEdit}>
-            Edit
+            {t.common.edit}
           </DropdownMenuItem>
           <DropdownMenuItem
             testID={`script-action-${script.id}-remove`}
             destructive
             onSelect={handleRemove}
           >
-            Remove
+            {t.common.remove}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -828,9 +842,12 @@ interface ScriptValidation {
   commandError: string | null;
 }
 
-function validateScript(script: ProjectScriptDraft): ScriptValidation {
-  const nameError = script.name.trim().length === 0 ? "Name is required" : null;
-  const commandError = script.commandText.trim().length === 0 ? "Command is required" : null;
+function validateScript(
+  script: ProjectScriptDraft,
+  t: ReturnType<typeof useTranslation>["t"],
+): ScriptValidation {
+  const nameError = script.name.trim().length === 0 ? t.workspace.nameRequired : null;
+  const commandError = script.commandText.trim().length === 0 ? t.workspace.commandRequired : null;
   return {
     hasErrors: Boolean(nameError || commandError),
     nameError,
@@ -854,6 +871,7 @@ const ALL_TOUCHED: ScriptFieldsTouched = { name: true, command: true };
 const NONE_TOUCHED: ScriptFieldsTouched = { name: false, command: false };
 
 function ScriptEditModal({ script, onChange, onCancel, onSave }: ScriptEditModalProps) {
+  const { t } = useTranslation();
   const [touched, setTouched] = useState<ScriptFieldsTouched>(NONE_TOUCHED);
 
   useEffect(() => {
@@ -880,7 +898,7 @@ function ScriptEditModal({ script, onChange, onCancel, onSave }: ScriptEditModal
   const handleNameBlur = useCallback(() => markTouched("name"), [markTouched]);
   const handleCommandBlur = useCallback(() => markTouched("command"), [markTouched]);
 
-  const validation = validateScript(script);
+  const validation = validateScript(script, t);
 
   const handleSavePress = useCallback(() => {
     if (validation.hasErrors) {
@@ -897,20 +915,20 @@ function ScriptEditModal({ script, onChange, onCancel, onSave }: ScriptEditModal
   return (
     <AdaptiveModalSheet
       visible
-      title={script.name ? `Edit ${script.name}` : "New script"}
+      title={script.name ? `${t.common.edit} ${script.name}` : t.workspace.newScript}
       onClose={onCancel}
       testID="script-edit-modal"
       desktopMaxWidth={560}
     >
       <View style={styles.modalSection}>
-        <Text style={styles.modalLabel}>Name</Text>
+        <Text style={styles.modalLabel}>{t.workspace.scriptName}</Text>
         <TextInput
           testID="script-edit-name"
-          accessibilityLabel="Script name"
+          accessibilityLabel={t.projectSettingsScreen.scriptName}
           value={script.name}
           onChangeText={handleNameChange}
           onBlur={handleNameBlur}
-          placeholder="dev"
+          placeholder={t.projectSettingsScreen.dev}
           placeholderTextColor={styles.placeholderColor.color}
           style={styles.modalInput}
         />
@@ -921,15 +939,15 @@ function ScriptEditModal({ script, onChange, onCancel, onSave }: ScriptEditModal
         ) : null}
       </View>
       <View style={styles.modalSection}>
-        <Text style={styles.modalLabel}>Command</Text>
+        <Text style={styles.modalLabel}>{t.workspace.scriptCommand}</Text>
         <TextInput
           testID="script-edit-command"
-          accessibilityLabel="Script command"
+          accessibilityLabel={t.projectSettingsScreen.scriptCommand}
           multiline
           value={script.commandText}
           onChangeText={handleCommandChange}
           onBlur={handleCommandBlur}
-          placeholder="npm run dev"
+          placeholder={t.projectSettingsScreen.npmRunDev}
           placeholderTextColor={styles.placeholderColor.color}
           style={styles.modalMultilineInput}
         />
@@ -942,25 +960,23 @@ function ScriptEditModal({ script, onChange, onCancel, onSave }: ScriptEditModal
       <View style={styles.modalSection}>
         <View style={styles.serviceToggleRow}>
           <View style={styles.serviceToggleText}>
-            <Text style={styles.serviceToggleLabel}>Run as a service</Text>
-            <Text style={styles.modalHint}>
-              Paseo supervises the process and assigns a port via $PASEO_PORT
-            </Text>
+            <Text style={styles.serviceToggleLabel}>{t.workspace.runAsService}</Text>
+            <Text style={styles.modalHint}>{t.workspace.runAsServiceHint}</Text>
           </View>
           <Switch
             value={isService}
             onValueChange={handleServiceToggle}
-            accessibilityLabel="Run as a service"
+            accessibilityLabel={t.projectSettingsScreen.runAsAService}
             testID="script-edit-service-toggle"
           />
         </View>
       </View>
       <View style={styles.modalFooter}>
         <Button onPress={onCancel} variant="ghost" size="md" testID="script-edit-cancel">
-          Cancel
+          {t.common.cancel}
         </Button>
         <Button onPress={handleSavePress} variant="default" size="md" testID="script-edit-save">
-          Save
+          {t.common.save}
         </Button>
       </View>
     </AdaptiveModalSheet>

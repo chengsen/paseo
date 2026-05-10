@@ -1,9 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
 
-vi.hoisted(() => {
-  (globalThis as unknown as { __DEV__: boolean }).__DEV__ = false;
-});
-
 import {
   resolveWorkspaceHeader,
   resolveWorkspaceHeaderRenderState,
@@ -11,6 +7,10 @@ import {
 } from "./workspace-header-source";
 import { createSidebarWorkspaceEntry } from "@/hooks/use-sidebar-workspaces-list";
 import type { WorkspaceDescriptor } from "@/stores/session-store";
+
+vi.hoisted(() => {
+  (globalThis as unknown as { __DEV__: boolean }).__DEV__ = false;
+});
 
 function createWorkspaceDescriptor(input: Partial<WorkspaceDescriptor> = {}): WorkspaceDescriptor {
   return {

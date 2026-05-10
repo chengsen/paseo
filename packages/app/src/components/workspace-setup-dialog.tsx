@@ -19,6 +19,7 @@ import { projectIconPlaceholderLabelFromDisplayName } from "@/utils/project-disp
 import { requireWorkspaceExecutionAuthority } from "@/utils/workspace-execution";
 import { navigateToPreparedWorkspaceTab } from "@/utils/workspace-navigation";
 import type { ImageAttachment, MessagePayload } from "./message-input";
+import { useTranslation } from "@/i18n";
 
 function toProjectIconDataUri(icon: { mimeType: string; data: string } | null): string | null {
   if (!icon) {
@@ -87,10 +88,6 @@ async function callWorkspaceCreation({
   return connectedClient.openProject(input.cwd);
 }
 
-function failureMessageForCreationMethod(method: "create_worktree" | "open_project") {
-  return method === "create_worktree" ? "Failed to create worktree" : "Failed to open project";
-}
-
 function buildCreateAgentOptions({
   composerState,
   text,
@@ -132,6 +129,7 @@ function buildCreateAgentOptions({
 
 export function WorkspaceSetupDialog() {
   const toast = useToast();
+  const { t } = useTranslation();
   const pendingWorkspaceSetup = useWorkspaceSetupStore((state) => state.pendingWorkspaceSetup);
   const clearWorkspaceSetup = useWorkspaceSetupStore((state) => state.clearWorkspaceSetup);
   const mergeWorkspaces = useSessionStore((state) => state.mergeWorkspaces);
@@ -162,7 +160,7 @@ export function WorkspaceSetupDialog() {
   });
   const composerState = chatDraft.composerState;
   if (!composerState && pendingWorkspaceSetup) {
-    throw new Error("Workspace setup composer state is required");
+    throw new Error(t.workspace.workspaceSetupComposerStateRequired);
   }
 
   const { icon: projectIcon } = useProjectIconQuery({
@@ -202,15 +200,15 @@ export function WorkspaceSetupDialog() {
 
   const withConnectedClient = useCallback(() => {
     if (!client || !isConnected) {
-      throw new Error("Host is not connected");
+      throw new Error(t.terminalPane.hostNotConnected);
     }
     return client;
-  }, [client, isConnected]);
+  }, [client, isConnected, t.terminalPane.hostNotConnected]);
 
   const ensureWorkspace = useCallback(
     async (input: { cwd: string; attachments: MessagePayload["attachments"] }) => {
       if (!pendingWorkspaceSetup) {
-        throw new Error("No workspace setup is pending");
+        throw new Error(t.workspace.noWorkspaceSetupPending);
       }
 
       if (createdWorkspace) {
@@ -226,7 +224,10 @@ export function WorkspaceSetupDialog() {
 
       if (payload.error || !payload.workspace) {
         throw new Error(
-          payload.error ?? failureMessageForCreationMethod(pendingWorkspaceSetup.creationMethod),
+          payload.error ??
+            (pendingWorkspaceSetup.creationMethod === "create_worktree"
+              ? t.workspace.failedToCreateWorktree
+              : t.workspace.failedToOpenProject),
         );
       }
 
@@ -243,6 +244,9 @@ export function WorkspaceSetupDialog() {
       mergeWorkspaces,
       pendingWorkspaceSetup,
       setHasHydratedWorkspaces,
+      t.workspace.noWorkspaceSetupPending,
+      t.workspace.failedToCreateWorktree,
+      t.workspace.failedToOpenProject,
       withConnectedClient,
     ],
   );
@@ -268,10 +272,10 @@ export function WorkspaceSetupDialog() {
         const ensuredWorkspace = await ensureWorkspace({ cwd, attachments });
         const connectedClient = withConnectedClient();
         if (!composerState) {
-          throw new Error("Workspace setup composer state is required");
+          throw new Error(t.workspace.workspaceSetupComposerStateRequired);
         }
         if (!composerState.selectedProvider) {
-          throw new Error("Select a model");
+          throw new Error(t.agent.selectModel);
         }
 
         const wirePayload = splitComposerAttachmentsForSubmit(attachments);
@@ -319,6 +323,8 @@ export function WorkspaceSetupDialog() {
       setAgents,
       ensureWorkspace,
       toast,
+      t.workspace.workspaceSetupComposerStateRequired,
+      t.agent.selectModel,
       withConnectedClient,
     ],
   );
@@ -372,7 +378,7 @@ export function WorkspaceSetupDialog() {
 
   return (
     <AdaptiveModalSheet
-      title="Create workspace"
+      title={t.workspace.createWorkspace}
       subtitle={subtitleContent}
       visible={true}
       onClose={handleClose}

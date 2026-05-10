@@ -33,6 +33,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { Check, ChevronDown, X } from "lucide-react-native";
 import { usePanelStore } from "@/stores/panel-store";
+import { useTranslation } from "@/i18n";
 import {
   AssistantMessage,
   SpeakMessage,
@@ -149,6 +150,7 @@ const AgentStreamViewComponent = forwardRef<AgentStreamViewHandle, AgentStreamVi
     );
     const openFileExplorerForCheckout = usePanelStore((state) => state.openFileExplorerForCheckout);
     const setExplorerTabForCheckout = usePanelStore((state) => state.setExplorerTabForCheckout);
+    const { t } = useTranslation();
 
     // Get serverId (fallback to agent's serverId if not provided)
     const resolvedServerId = serverId ?? agent.serverId ?? "";
@@ -657,10 +659,10 @@ const AgentStreamViewComponent = forwardRef<AgentStreamViewHandle, AgentStreamVi
 
       return (
         <View style={emptyStateStyle}>
-          <Text style={stylesheet.emptyStateText}>Start chatting with this agent...</Text>
+          <Text style={stylesheet.emptyStateText}>{t.agentStreamView.startChattingWithAgent}</Text>
         </View>
       );
-    }, [renderModel, emptyStateStyle]);
+    }, [renderModel, emptyStateStyle, t.agentStreamView.startChattingWithAgent]);
 
     const historyItems = renderModel.history;
     const _liveHeadItems = renderModel.segments.liveHead;
@@ -779,7 +781,7 @@ const AgentStreamViewComponent = forwardRef<AgentStreamViewHandle, AgentStreamVi
                   style={stylesheet.scrollToBottomButton}
                   onPress={scrollToBottom}
                   accessibilityRole="button"
-                  accessibilityLabel="Scroll to bottom"
+                  accessibilityLabel={t.agentStreamView.scrollToBottom}
                   testID="scroll-to-bottom-button"
                 >
                   <ChevronDown size={24} color={stylesheet.scrollToBottomIcon.color} />
@@ -979,6 +981,7 @@ function PermissionRequestCard({
   permission: PendingPermission;
   client: DaemonClient | null;
 }) {
+  const { t } = useTranslation();
   const isMobile = useIsCompactFormFactor();
 
   const { request } = permission;
@@ -1167,7 +1170,7 @@ function PermissionRequestCard({
 
       {planMarkdown ? (
         <PlanCard
-          title="Proposed plan"
+          title={t.agent.proposedPlan}
           text={planMarkdown}
           testID="permission-plan-card"
           disableOuterSpacing

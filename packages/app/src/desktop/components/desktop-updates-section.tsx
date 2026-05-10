@@ -15,6 +15,8 @@ import { useBuiltInDaemonManagement } from "@/desktop/hooks/use-built-in-daemon-
 import { useDaemonStatus } from "@/desktop/hooks/use-daemon-status";
 import { useDesktopSettings, type DesktopSettings } from "@/desktop/settings/desktop-settings";
 import { resolveAppVersion } from "@/utils/app-version";
+import { useTranslation } from "@/i18n";
+import type { Translation } from "@/i18n/translations/en";
 
 type DesktopDaemonSettings = DesktopSettings["daemon"];
 
@@ -39,7 +41,7 @@ function useKeepRunningAfterQuitToggle(args: {
   return { isUpdatingKeepRunningAfterQuit, handleToggleKeepRunningAfterQuit };
 }
 
-function useDaemonCliStatusModal() {
+function useDaemonCliStatusModal(t: Translation) {
   const [cliStatusOutput, setCliStatusOutput] = useState<string | null>(null);
   const [isCliStatusModalOpen, setIsCliStatusModalOpen] = useState(false);
   const [isLoadingCliStatus, setIsLoadingCliStatus] = useState(false);
@@ -64,13 +66,13 @@ function useDaemonCliStatusModal() {
     }
     void Clipboard.setStringAsync(cliStatusOutput)
       .then(() => {
-        Alert.alert("Copied", "Status copied to clipboard.");
+        Alert.alert(t.daemon.copied, t.daemon.statusCopied);
         return;
       })
       .catch((error) => {
         console.error("[Settings] Failed to copy daemon status", error);
       });
-  }, [cliStatusOutput]);
+  }, [cliStatusOutput, t]);
 
   const handleCloseCliStatusModal = useCallback(() => setIsCliStatusModalOpen(false), []);
 
@@ -84,7 +86,7 @@ function useDaemonCliStatusModal() {
   };
 }
 
-function useDaemonLogsModal(daemonLogs: { logPath?: string } | null) {
+function useDaemonLogsModal(t: Translation, daemonLogs: { logPath?: string } | null) {
   const [isLogsModalOpen, setIsLogsModalOpen] = useState(false);
 
   const handleCopyLogPath = useCallback(() => {
@@ -95,14 +97,14 @@ function useDaemonLogsModal(daemonLogs: { logPath?: string } | null) {
 
     void Clipboard.setStringAsync(logPath)
       .then(() => {
-        Alert.alert("Copied", "Log path copied.");
+        Alert.alert(t.daemon.copied, t.daemon.logPathCopied);
         return;
       })
       .catch((error) => {
         console.error("[Settings] Failed to copy log path", error);
-        Alert.alert("Error", "Unable to copy log path.");
+        Alert.alert(t.common.error, t.daemon.unableToCopyLogPath);
       });
-  }, [daemonLogs?.logPath]);
+  }, [daemonLogs?.logPath, t]);
 
   const handleOpenLogs = useCallback(() => {
     if (!daemonLogs) {
@@ -122,17 +124,24 @@ interface DaemonLogsModalProps {
   daemonLogs: { logPath?: string; contents?: string } | null;
 }
 
-function DaemonLogsModal({ visible, onClose, daemonLogs }: DaemonLogsModalProps) {
+function DaemonLogsModal({
+  visible,
+  onClose,
+  daemonLogs,
+  t,
+}: DaemonLogsModalProps & { t: Translation }) {
   return (
     <AdaptiveModalSheet
       visible={visible}
       onClose={onClose}
-      title="Daemon logs"
+      title={t.daemon.daemonLogs}
       testID="managed-daemon-logs-dialog"
       snapPoints={LOGS_MODAL_SNAP_POINTS}
     >
       <View style={styles.modalBody}>
-        <Text style={settingsStyles.rowHint}>{daemonLogs?.logPath ?? "Log path unavailable"}</Text>
+        <Text style={settingsStyles.rowHint}>
+          {daemonLogs?.logPath ?? t.daemon.logPathUnavailable}
+        </Text>
         <Text style={styles.logOutput} selectable>
           {daemonLogs?.contents?.length ? daemonLogs.contents : "(log file is empty)"}
         </Text>
@@ -153,12 +162,13 @@ function DaemonCliStatusModal({
   onClose,
   cliStatusOutput,
   onCopy,
-}: DaemonCliStatusModalProps) {
+  t,
+}: DaemonCliStatusModalProps & { t: Translation }) {
   return (
     <AdaptiveModalSheet
       visible={visible}
       onClose={onClose}
-      title="Daemon status"
+      title={t.daemon.daemonStatus}
       testID="daemon-cli-status-dialog"
       snapPoints={CLI_STATUS_MODAL_SNAP_POINTS}
     >
@@ -168,10 +178,10 @@ function DaemonCliStatusModal({
         </Text>
         <View style={styles.modalActions}>
           <Button variant="outline" size="sm" onPress={onClose}>
-            Close
+            {t.common.close}
           </Button>
           <Button size="sm" onPress={onCopy}>
-            Copy
+            {t.common.copy}
           </Button>
         </View>
       </View>
@@ -196,6 +206,7 @@ interface DaemonInfoCardProps {
   handleOpenLogs: () => void;
   handleRunCliStatus: () => void;
   isLoadingCliStatus: boolean;
+  t: Translation;
 }
 
 function DaemonInfoCard(props: DaemonInfoCardProps) {
@@ -216,14 +227,15 @@ function DaemonInfoCard(props: DaemonInfoCardProps) {
     handleOpenLogs,
     handleRunCliStatus,
     isLoadingCliStatus,
+    t,
   } = props;
 
   return (
     <View style={settingsStyles.card}>
       <View style={settingsStyles.row}>
         <View style={settingsStyles.rowContent}>
-          <Text style={settingsStyles.rowTitle}>Status</Text>
-          <Text style={settingsStyles.rowHint}>Only the built-in desktop daemon is shown here</Text>
+          <Text style={settingsStyles.rowTitle}>{t.daemon.status}</Text>
+          <Text style={settingsStyles.rowHint}>{t.daemon.onlyBuiltInShown}</Text>
         </View>
         <View style={styles.statusValueGroup}>
           <Text style={styles.valueText}>{daemonStatusStateText}</Text>
@@ -232,39 +244,39 @@ function DaemonInfoCard(props: DaemonInfoCardProps) {
       </View>
       <View style={ROW_WITH_BORDER_STYLE}>
         <View style={settingsStyles.rowContent}>
-          <Text style={settingsStyles.rowTitle}>Manage built-in daemon</Text>
-          <Text style={settingsStyles.rowHint}>Let Paseo start and stop the built-in daemon</Text>
+          <Text style={settingsStyles.rowTitle}>{t.daemon.manageBuiltInDaemon}</Text>
+          <Text style={settingsStyles.rowHint}>{t.daemon.manageBuiltInDaemonHint}</Text>
         </View>
         <Switch
           value={!isDaemonManagementPaused}
           onValueChange={handleToggleDaemonManagement}
           disabled={isUpdatingDaemonManagement}
-          accessibilityLabel="Manage built-in daemon"
+          accessibilityLabel={t.daemon.manageBuiltInDaemon}
         />
       </View>
       <View style={ROW_WITH_BORDER_STYLE}>
         <View style={settingsStyles.rowContent}>
-          <Text style={settingsStyles.rowTitle}>Keep daemon running after quit</Text>
-          <Text style={settingsStyles.rowHint}>Daemon keeps running when you quit Paseo</Text>
+          <Text style={settingsStyles.rowTitle}>{t.daemon.keepDaemonRunning}</Text>
+          <Text style={settingsStyles.rowHint}>{t.daemon.keepDaemonRunningHint}</Text>
         </View>
         <Switch
           value={keepRunningAfterQuit}
           onValueChange={handleToggleKeepRunningAfterQuit}
           disabled={isUpdatingKeepRunningAfterQuit}
-          accessibilityLabel="Keep daemon running after quit"
+          accessibilityLabel={t.daemon.keepDaemonRunning}
         />
       </View>
       <View style={ROW_WITH_BORDER_STYLE}>
         <View style={settingsStyles.rowContent}>
-          <Text style={settingsStyles.rowTitle}>Log file</Text>
+          <Text style={settingsStyles.rowTitle}>{t.daemon.logFile}</Text>
           <Text style={settingsStyles.rowHint}>
-            {daemonLogs?.logPath ?? "Log path unavailable"}
+            {daemonLogs?.logPath ?? t.daemon.logPathUnavailable}
           </Text>
         </View>
         <View style={styles.actionGroup}>
           {daemonLogs?.logPath ? (
             <Button variant="outline" size="sm" leftIcon={copyIcon} onPress={handleCopyLogPath}>
-              Copy path
+              {t.common.copy}
             </Button>
           ) : null}
           <Button
@@ -274,16 +286,14 @@ function DaemonInfoCard(props: DaemonInfoCardProps) {
             onPress={handleOpenLogs}
             disabled={!daemonLogs}
           >
-            Open logs
+            {t.daemon.openLogs}
           </Button>
         </View>
       </View>
       <View style={ROW_WITH_BORDER_STYLE}>
         <View style={settingsStyles.rowContent}>
-          <Text style={settingsStyles.rowTitle}>Full status</Text>
-          <Text style={settingsStyles.rowHint}>
-            Runs `paseo daemon status` and shows the output
-          </Text>
+          <Text style={settingsStyles.rowTitle}>{t.daemon.fullStatus}</Text>
+          <Text style={settingsStyles.rowHint}>{t.daemon.fullStatusHint}</Text>
         </View>
         <Button
           variant="outline"
@@ -292,7 +302,7 @@ function DaemonInfoCard(props: DaemonInfoCardProps) {
           onPress={handleRunCliStatus}
           disabled={isLoadingCliStatus}
         >
-          {isLoadingCliStatus ? "Loading..." : "View status"}
+          {isLoadingCliStatus ? t.daemon.loading : t.daemon.viewStatus}
         </Button>
       </View>
     </View>
@@ -300,6 +310,7 @@ function DaemonInfoCard(props: DaemonInfoCardProps) {
 }
 
 export function LocalDaemonSection() {
+  const { t } = useTranslation();
   const { theme } = useUnistyles();
   const showSection = shouldUseDesktopDaemon();
   const appVersion = resolveAppVersion();
@@ -336,7 +347,7 @@ export function LocalDaemonSection() {
     });
 
   const { isLogsModalOpen, handleCopyLogPath, handleOpenLogs, handleCloseLogsModal } =
-    useDaemonLogsModal(daemonLogs);
+    useDaemonLogsModal(t, daemonLogs);
 
   const {
     cliStatusOutput,
@@ -345,7 +356,7 @@ export function LocalDaemonSection() {
     handleCopyCliStatus,
     handleOpenCliStatus,
     handleCloseCliStatusModal,
-  } = useDaemonCliStatusModal();
+  } = useDaemonCliStatusModal(t);
   const handleRunCliStatus = useCallback(() => {
     void handleOpenCliStatus();
   }, [handleOpenCliStatus]);
@@ -381,12 +392,12 @@ export function LocalDaemonSection() {
         textStyle={settingsStyles.sectionHeaderLinkText}
         style={settingsStyles.sectionHeaderLink}
         onPress={handleOpenAdvancedSettings}
-        accessibilityLabel="Open advanced daemon settings"
+        accessibilityLabel={t.daemon.advancedSettings}
       >
-        Advanced settings
+        {t.daemon.advancedSettings}
       </Button>
     ),
-    [advancedSettingsIcon, handleOpenAdvancedSettings],
+    [advancedSettingsIcon, handleOpenAdvancedSettings, t],
   );
 
   if (!showSection) {
@@ -395,7 +406,7 @@ export function LocalDaemonSection() {
 
   return (
     <SettingsSection
-      title="Daemon"
+      title={t.daemon.title}
       trailing={advancedSettingsButton}
       testID="host-page-daemon-lifecycle-card"
     >
@@ -422,15 +433,12 @@ export function LocalDaemonSection() {
             handleOpenLogs={handleOpenLogs}
             handleRunCliStatus={handleRunCliStatus}
             isLoadingCliStatus={isLoadingCliStatus}
+            t={t}
           />
 
           {daemonVersionMismatch ? (
             <View style={styles.warningCard}>
-              <Text style={styles.warningText}>
-                {
-                  "App and daemon versions don't match. Update both to the same version for the best experience."
-                }
-              </Text>
+              <Text style={styles.warningText}>{t.daemon.versionMismatch}</Text>
             </View>
           ) : null}
         </>
@@ -440,6 +448,7 @@ export function LocalDaemonSection() {
         visible={isLogsModalOpen}
         onClose={handleCloseLogsModal}
         daemonLogs={daemonLogs}
+        t={t}
       />
 
       <DaemonCliStatusModal
@@ -447,6 +456,7 @@ export function LocalDaemonSection() {
         onClose={handleCloseCliStatusModal}
         cliStatusOutput={cliStatusOutput}
         onCopy={handleCopyCliStatus}
+        t={t}
       />
     </SettingsSection>
   );

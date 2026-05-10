@@ -9,6 +9,7 @@ import {
   type DesktopAppUpdateInstallResult,
 } from "@/desktop/updates/desktop-updates";
 import { useDesktopSettings } from "@/desktop/settings/desktop-settings";
+import { useTranslation } from "@/i18n";
 import { useDesktopIpcErrorReporter } from "@/desktop/hooks/desktop-ipc-error";
 
 export type DesktopAppUpdateStatus =
@@ -47,44 +48,46 @@ function formatStatusText(input: {
   status: DesktopAppUpdateStatus;
   availableUpdate: DesktopAppUpdateCheckResult | null;
   installMessage: string | null;
+  t: ReturnType<typeof useTranslation>["t"];
 }): string {
-  const { status, availableUpdate, installMessage } = input;
+  const { status, availableUpdate, installMessage, t } = input;
 
   if (status === "checking") {
-    return "Checking for app updates...";
+    return t.aboutSettings.checkingForAppUpdates;
   }
 
   if (status === "installing") {
-    return "Installing app update...";
+    return t.aboutSettings.installingAppUpdate;
   }
 
   if (status === "up-to-date") {
-    return "App is up to date.";
+    return t.aboutSettings.appIsUpToDate;
   }
 
   if (status === "pending") {
-    return "We'll let you know when the update is ready.";
+    return t.aboutSettings.updateReadySoon;
   }
 
   if (status === "available") {
     if (availableUpdate?.latestVersion) {
-      return `Update ready: ${formatVersionWithPrefix(availableUpdate.latestVersion)}`;
+      return `${t.aboutSettings.updateReadyToInstall} ${formatVersionWithPrefix(availableUpdate.latestVersion)}`;
     }
-    return "An app update is ready to install.";
+    return t.aboutSettings.updateReadyToInstall;
   }
 
   if (status === "installed") {
-    return installMessage ?? "App update installed. Restart required.";
+    return installMessage ?? t.aboutSettings.updateInstalledRestartRequired;
   }
 
   if (status === "error") {
-    return "Failed to update app.";
+    return t.aboutSettings.failedToUpdateApp;
   }
 
-  return "Update status has not been checked yet.";
+  return t.aboutSettings.updateStatusNotChecked;
 }
 
 export function useDesktopAppUpdater(): UseDesktopAppUpdaterReturn {
+  const { t } = useTranslation();
   const isDesktopApp = shouldShowDesktopUpdateSection();
   const { settings: desktopSettings } = useDesktopSettings();
   const releaseChannel = desktopSettings.releaseChannel;
@@ -222,6 +225,7 @@ export function useDesktopAppUpdater(): UseDesktopAppUpdaterReturn {
       status,
       availableUpdate,
       installMessage,
+      t,
     }),
     availableUpdate,
     errorMessage,

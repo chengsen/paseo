@@ -24,6 +24,7 @@ import {
 } from "@/stores/panel-store";
 import { useExplorerSidebarAnimation } from "@/contexts/explorer-sidebar-animation-context";
 import { HEADER_INNER_HEIGHT, useIsCompactFormFactor } from "@/constants/layout";
+import { useTranslation } from "@/i18n";
 import { GitDiffPane } from "./git-diff-pane";
 import { FileExplorerPane } from "./file-explorer-pane";
 import { useKeyboardShiftStyle } from "@/hooks/use-keyboard-shift-style";
@@ -406,6 +407,7 @@ function SidebarContent({
   isOpen,
   onOpenFile,
 }: SidebarContentProps) {
+  const { t } = useTranslation();
   const { theme } = useUnistyles();
   const padding = useWindowControlsPadding("explorerSidebar");
   const canQueryPullRequest = isGit && Boolean(workspaceRoot);
@@ -437,7 +439,7 @@ function SidebarContent({
             <ExplorerTabButton
               tab="changes"
               active={resolvedTab === "changes"}
-              label="Changes"
+              label={t.workspace.changes}
               onTabPress={onTabPress}
               testID="explorer-tab-changes"
             />
@@ -445,7 +447,7 @@ function SidebarContent({
           <ExplorerTabButton
             tab="files"
             active={resolvedTab === "files"}
-            label="Files"
+            label={t.workspace.files}
             onTabPress={onTabPress}
             testID="explorer-tab-files"
           />

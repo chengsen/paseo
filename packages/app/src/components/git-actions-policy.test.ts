@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { en } from "@/i18n/translations/en";
 import { buildGitActions, type BuildGitActionsInput } from "./git-actions-policy";
 
 function createInput(overrides: Partial<BuildGitActionsInput> = {}): BuildGitActionsInput {
@@ -20,6 +21,7 @@ function createInput(overrides: Partial<BuildGitActionsInput> = {}): BuildGitAct
     behindOfOrigin: 0,
     shouldPromoteArchive: false,
     shipDefault: "merge",
+    t: en,
     runtime: {
       commit: {
         disabled: false,

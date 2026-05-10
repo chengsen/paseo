@@ -9,6 +9,7 @@ import {
 } from "@/desktop/updates/desktop-updates";
 import { useStableEvent } from "@/hooks/use-stable-event";
 import { openExternalUrl } from "@/utils/open-external-url";
+import { useTranslation } from "@/i18n";
 
 const FALLBACK_DOWNLOAD_URL = "https://paseo.sh/download";
 
@@ -26,6 +27,7 @@ function RosettaCalloutDescription() {
 }
 
 export function RosettaCalloutSource() {
+  const { t } = useTranslation();
   const callouts = useSidebarCallouts();
   const [runtimeInfo, setRuntimeInfo] = useState<DesktopRuntimeInfo | null>(null);
   const isElectronMac = getIsElectronMac();
@@ -73,14 +75,20 @@ export function RosettaCalloutSource() {
       dismissible: false,
       actions: [
         {
-          label: "Download",
+          label: t.desktopUpdates.downloadAppleSiliconBuild,
           onPress: openDownload,
           variant: "primary",
         },
       ],
       testID: "rosetta-callout",
     });
-  }, [callouts, isElectronMac, openDownload, runtimeInfo]);
+  }, [
+    callouts,
+    isElectronMac,
+    openDownload,
+    runtimeInfo,
+    t.desktopUpdates.downloadAppleSiliconBuild,
+  ]);
 
   return null;
 }

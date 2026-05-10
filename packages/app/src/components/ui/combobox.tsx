@@ -39,6 +39,7 @@ import {
 } from "./combobox-options";
 import type { ComboboxOptionModel } from "./combobox-options";
 import { isWeb } from "@/constants/platform";
+import { useTranslation } from "@/i18n";
 import {
   IsolatedBottomSheetModal,
   useIsolatedBottomSheetVisibility,
@@ -1179,15 +1180,15 @@ export function Combobox({
   renderOption,
   onSearchQueryChange,
   searchable = true,
-  placeholder = "Search...",
+  placeholder,
   searchPlaceholder,
-  emptyText = "No options match your search.",
+  emptyText,
   allowCustomValue = false,
-  customValuePrefix = "Use",
+  customValuePrefix,
   customValueDescription,
   customValueKind,
   optionsPosition = "below-search",
-  title = "Select",
+  title,
   open,
   onOpenChange,
   desktopPlacement = "top-start",
@@ -1200,7 +1201,12 @@ export function Combobox({
   children,
 }: ComboboxProps): ReactElement | null {
   const { theme } = useUnistyles();
+  const { t } = useTranslation();
   const isMobile = useIsCompactFormFactor();
+  const effectivePlaceholder = placeholder ?? t.combobox.searchPlaceholder;
+  const effectiveEmptyText = emptyText ?? t.combobox.noOptionsMatch;
+  const effectiveCustomValuePrefix = customValuePrefix ?? t.combobox.use;
+  const effectiveTitle = title ?? t.common.select;
   const titleColor = theme.colors.foreground;
   const effectiveOptionsPosition = resolveEffectiveOptionsPosition(isMobile, optionsPosition);
   const isDesktopAboveSearch = resolveIsDesktopAboveSearch(isMobile, effectiveOptionsPosition);
@@ -1331,7 +1337,7 @@ export function Combobox({
         searchQuery,
         searchable,
         allowCustomValue,
-        customValuePrefix,
+        customValuePrefix: effectiveCustomValuePrefix,
         customValueDescription,
         customValueKind,
       }),
@@ -1339,7 +1345,7 @@ export function Combobox({
       allowCustomValue,
       customValueDescription,
       customValueKind,
-      customValuePrefix,
+      effectiveCustomValuePrefix,
       options,
       searchQuery,
       searchable,
@@ -1452,7 +1458,7 @@ export function Combobox({
     [],
   );
 
-  const effectiveSearchPlaceholder = searchPlaceholder ?? placeholder;
+  const effectiveSearchPlaceholder = searchPlaceholder ?? effectivePlaceholder;
   const hasChildren = Boolean(children);
 
   if (isMobile) {
@@ -1464,7 +1470,7 @@ export function Combobox({
         handleSheetDismiss={handleSheetDismiss}
         handleIndicatorStyle={handleIndicatorStyle}
         titleColor={titleColor}
-        title={title}
+        title={effectiveTitle}
         stickyHeader={stickyHeader}
         searchable={searchable}
         hasChildren={hasChildren}
@@ -1475,7 +1481,7 @@ export function Combobox({
         orderedVisibleOptions={orderedVisibleOptions}
         value={value}
         activeIndex={activeIndex}
-        emptyText={emptyText}
+        emptyText={effectiveEmptyText}
         handleSelect={handleSelect}
         renderOption={renderOption}
       >
@@ -1507,7 +1513,7 @@ export function Combobox({
       orderedVisibleOptions={orderedVisibleOptions}
       value={value}
       activeIndex={activeIndex}
-      emptyText={emptyText}
+      emptyText={effectiveEmptyText}
       handleSelect={handleSelect}
       renderOption={renderOption}
       hasChildren={hasChildren}

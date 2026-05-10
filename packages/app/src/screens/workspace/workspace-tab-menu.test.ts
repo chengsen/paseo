@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { buildWorkspaceTabMenuEntries } from "@/screens/workspace/workspace-tab-menu";
 import type { WorkspaceTabDescriptor } from "@/screens/workspace/workspace-tabs-types";
+import { en } from "@/i18n/translations/en";
 
 function createAgentTab(): WorkspaceTabDescriptor {
   return {
@@ -27,6 +28,7 @@ describe("buildWorkspaceTabMenuEntries", () => {
       index: 1,
       tabCount: 3,
       menuTestIDBase: "workspace-tab-context-agent_123",
+      t: en,
       onCopyResumeCommand,
       onCopyAgentId,
       onReloadAgent,
@@ -54,6 +56,7 @@ describe("buildWorkspaceTabMenuEntries", () => {
       index: 1,
       tabCount: 3,
       menuTestIDBase: "workspace-tab-menu-agent_123",
+      t: en,
       onCopyResumeCommand: vi.fn(),
       onCopyAgentId: vi.fn(),
       onReloadAgent: vi.fn(),
@@ -86,6 +89,7 @@ describe("buildWorkspaceTabMenuEntries", () => {
       index: 0,
       tabCount: 1,
       menuTestIDBase: "workspace-tab-menu-draft_123",
+      t: en,
       onCopyResumeCommand: vi.fn(),
       onCopyAgentId: vi.fn(),
       onReloadAgent: vi.fn(),
@@ -111,6 +115,7 @@ describe("buildWorkspaceTabMenuEntries", () => {
       index: 0,
       tabCount: 1,
       menuTestIDBase: "workspace-tab-context-agent_123",
+      t: en,
       onCopyResumeCommand: vi.fn(),
       onCopyAgentId: vi.fn(),
       onReloadAgent: vi.fn(),

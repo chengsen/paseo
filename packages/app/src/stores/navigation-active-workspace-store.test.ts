@@ -4,6 +4,12 @@
 import { renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import {
+  navigateToLastWorkspace,
+  navigateToWorkspace,
+  useActiveWorkspaceSelection,
+} from "@/stores/navigation-active-workspace-store";
+
 const routerMock = vi.hoisted(() => ({
   dismissTo: vi.fn(),
 }));
@@ -19,12 +25,6 @@ vi.mock("expo-router", () => ({
   useLocalSearchParams: () => localParamsState.value,
   usePathname: () => pathnameState.value,
 }));
-
-import {
-  navigateToLastWorkspace,
-  navigateToWorkspace,
-  useActiveWorkspaceSelection,
-} from "@/stores/navigation-active-workspace-store";
 
 describe("workspace navigation", () => {
   beforeEach(() => {

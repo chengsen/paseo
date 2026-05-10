@@ -1,4 +1,4 @@
-import { Buffer } from "buffer";
+import { utf8ToBase64, base64ToUtf8 } from "@/utils/base64";
 
 type NullableString = string | null | undefined;
 const BASE64_WORKSPACE_ID_PREFIX = "b64_";
@@ -44,11 +44,7 @@ function decodeSegment(value: string): string {
 }
 
 function toBase64UrlNoPad(input: string): string {
-  return Buffer.from(input, "utf8")
-    .toString("base64")
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/g, "");
+  return utf8ToBase64(input).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 }
 
 function decodeBase64UrlNoPadUtf8(input: string): string | null {
@@ -63,14 +59,11 @@ function decodeBase64UrlNoPadUtf8(input: string): string | null {
   const base64 = normalized.replace(/-/g, "+").replace(/_/g, "/");
   const padded = base64.padEnd(base64.length + ((4 - (base64.length % 4)) % 4), "=");
 
-  let decoded: string;
   try {
-    decoded = Buffer.from(padded, "base64").toString("utf8");
+    return base64ToUtf8(padded);
   } catch {
     return null;
   }
-
-  return decoded;
 }
 
 function tryDecodeBase64UrlNoPadUtf8(input: string): string | null {

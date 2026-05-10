@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { useSidebarCollapsedSectionsStore } from "@/stores/sidebar-collapsed-sections-store";
+
 vi.mock("@react-native-async-storage/async-storage", () => ({
   default: {
     getItem: vi.fn(async () => null),
@@ -7,8 +9,6 @@ vi.mock("@react-native-async-storage/async-storage", () => ({
     removeItem: vi.fn(),
   },
 }));
-
-import { useSidebarCollapsedSectionsStore } from "@/stores/sidebar-collapsed-sections-store";
 
 describe("sidebar-collapsed-sections-store", () => {
   beforeEach(() => {

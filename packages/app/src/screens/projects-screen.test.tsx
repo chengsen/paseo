@@ -7,6 +7,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { ProjectHostEntry, ProjectSummary, WorkspaceSummary } from "@/utils/projects";
 import type { ProjectHostError, UseProjectsResult } from "@/hooks/use-projects";
 
+import ProjectsScreen from "./projects-screen";
+
 const { theme, projectsState, navigate } = vi.hoisted(() => ({
   theme: {
     spacing: { 0: 0, 1: 4, "1.5": 6, 2: 8, 3: 12, 4: 16, 6: 24, 8: 32 },
@@ -191,8 +193,6 @@ vi.mock("@/hooks/use-projects", () => ({
 vi.mock("@/hooks/use-project-icon-query", () => ({
   useProjectIconQuery: () => ({ icon: null, isLoading: false, isError: false }),
 }));
-
-import ProjectsScreen from "./projects-screen";
 
 function workspaceSummary(overrides: Partial<WorkspaceSummary> = {}): WorkspaceSummary {
   return {

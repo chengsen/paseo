@@ -7,6 +7,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SidebarCalloutSlot } from "@/components/sidebar-callout-slot";
 import { SidebarCalloutProvider } from "@/contexts/sidebar-callout-context";
 
+import { UpdateCalloutSource } from "./update-callout-source";
+
 const { theme } = vi.hoisted(() => ({
   theme: {
     spacing: { 0: 0, 1: 4, 2: 8, 3: 12, 4: 16 },
@@ -93,8 +95,6 @@ vi.mock("@/desktop/updates/use-desktop-app-updater", () => ({
 
 vi.stubGlobal("React", React);
 vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true);
-
-import { UpdateCalloutSource } from "./update-callout-source";
 
 function resetUpdaterState(): void {
   updaterState.value = {

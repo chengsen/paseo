@@ -1,5 +1,4 @@
 import { useRef, ReactNode, useCallback, useEffect } from "react";
-import { Buffer } from "buffer";
 import { AppState } from "react-native";
 import { useQueryClient } from "@tanstack/react-query";
 import { useClientActivity } from "@/hooks/use-client-activity";
@@ -26,6 +25,7 @@ import type { DaemonClient } from "@server/client/daemon-client";
 import type { AgentSessionConfig } from "@server/server/agent/agent-sdk-types";
 import type { GitSetupOptions } from "@server/shared/messages";
 import type { AgentPermissionResponse } from "@server/server/agent/agent-sdk-types";
+import { base64ToUint8Array } from "@/utils/base64";
 import { getHostRuntimeStore, useHostRuntimeIsConnected } from "@/runtime/host-runtime";
 import { useVoiceAudioEngineOptional, useVoiceRuntimeOptional } from "@/contexts/voice-context";
 import type { AudioPlaybackSource } from "@/voice/audio-engine-types";
@@ -105,7 +105,7 @@ interface BufferedAudioChunk {
 }
 
 function decodeBase64Chunk(base64: string): Uint8Array {
-  return Buffer.from(base64, "base64");
+  return base64ToUint8Array(base64);
 }
 
 function buildAudioPlaybackSource(chunks: BufferedAudioChunk[]): AudioPlaybackSource {

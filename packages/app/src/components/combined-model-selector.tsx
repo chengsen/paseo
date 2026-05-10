@@ -53,6 +53,7 @@ function backButtonStyle({ hovered, pressed }: PressableStateCallbackType & { ho
     pressed && styles.backButtonPressed,
   ];
 }
+import { useTranslation } from "@/i18n";
 import { getProviderIcon } from "@/components/provider-icons";
 import {
   buildModelRows,
@@ -314,6 +315,7 @@ function FavoritesSection({
   canSelectProvider: (provider: string) => boolean;
   onToggleFavorite?: (provider: string, modelId: string) => void;
 }) {
+  const { t } = useTranslation();
   const { theme: _theme } = useUnistyles();
 
   if (favoriteRows.length === 0) {
@@ -323,7 +325,7 @@ function FavoritesSection({
   return (
     <View style={styles.favoritesContainer}>
       <View style={styles.sectionHeading}>
-        <Text style={styles.sectionHeadingText}>Favorites</Text>
+        <Text style={styles.sectionHeadingText}>{t.combinedModelSelector.favorites}</Text>
       </View>
       {favoriteRows.map((row) => (
         <SelectableModelRow
@@ -490,6 +492,7 @@ function SelectorContent({
   onToggleFavorite,
   onDrillDown,
 }: SelectorContentProps) {
+  const { t } = useTranslation();
   const { theme } = useUnistyles();
   const allRows = useMemo(
     () => buildModelRows(providerDefinitions, allProviderModels),
@@ -563,7 +566,9 @@ function SelectorContent({
       {!hasResults ? (
         <View style={styles.emptyState}>
           <Search size={theme.iconSize.md} color={theme.colors.foregroundMuted} />
-          <Text style={styles.emptyStateText}>No models match your search</Text>
+          <Text style={styles.emptyStateText}>
+            {t.combinedModelSelector.noModelsMatchYourSearch}
+          </Text>
         </View>
       ) : null}
     </View>
@@ -610,6 +615,7 @@ export function CombinedModelSelector({
   onClose,
   disabled = false,
 }: CombinedModelSelectorProps) {
+  const { t } = useTranslation();
   const { theme } = useUnistyles();
   const anchorRef = useRef<View>(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -820,7 +826,9 @@ export function CombinedModelSelector({
         ) : (
           <View style={styles.sheetLoadingState}>
             <ActivityIndicator size="small" color={theme.colors.foregroundMuted} />
-            <Text style={styles.sheetLoadingText}>Loading model selector…</Text>
+            <Text style={styles.sheetLoadingText}>
+              {t.combinedModelSelector.loadingModelSelector}
+            </Text>
           </View>
         )}
       </Combobox>

@@ -11,6 +11,7 @@ import Animated, { runOnJS, useAnimatedReaction } from "react-native-reanimated"
 import { StyleSheet, useUnistyles } from "react-native-unistyles";
 import { encodeTerminalKeyInput } from "@server/shared/terminal-key-input";
 import { useHostRuntimeClient, useHostRuntimeIsConnected } from "@/runtime/host-runtime";
+import { useTranslation } from "@/i18n";
 import { useKeyboardShiftStyle } from "@/hooks/use-keyboard-shift-style";
 import { useAppVisible } from "@/hooks/use-app-visible";
 import { useStableEvent } from "@/hooks/use-stable-event";
@@ -46,24 +47,6 @@ interface TerminalPaneProps {
 
 const TERMINAL_REFIT_DELAYS_MS = [0, 48, 144, 320];
 
-const MODIFIER_LABELS = {
-  ctrl: "Ctrl",
-  shift: "Shift",
-  alt: "Alt",
-} as const;
-
-const KEY_BUTTONS: Array<{ id: string; label: string; key: string }> = [
-  { id: "esc", label: "Esc", key: "Escape" },
-  { id: "tab", label: "Tab", key: "Tab" },
-  { id: "up", label: "↑", key: "ArrowUp" },
-  { id: "down", label: "↓", key: "ArrowDown" },
-  { id: "left", label: "←", key: "ArrowLeft" },
-  { id: "right", label: "→", key: "ArrowRight" },
-  { id: "enter", label: "Enter", key: "Enter" },
-  { id: "backspace", label: "⌫", key: "Backspace" },
-  { id: "c", label: "C", key: "c" },
-];
-
 interface ModifierState {
   ctrl: boolean;
   shift: boolean;
@@ -98,11 +81,12 @@ function terminalScopeKey(input: { serverId: string; cwd: string }): string {
 
 interface ModifierButtonProps {
   modifier: keyof ModifierState;
+  label: string;
   active: boolean;
   onToggle: (modifier: keyof ModifierState) => void;
 }
 
-function ModifierButton({ modifier, active, onToggle }: ModifierButtonProps) {
+function ModifierButton({ modifier, label, active, onToggle }: ModifierButtonProps) {
   const handlePress = useCallback(() => onToggle(modifier), [onToggle, modifier]);
   const pressableStyle = useCallback(
     ({ hovered, pressed }: PressableStateCallbackType & { hovered?: boolean }) => [
@@ -118,7 +102,7 @@ function ModifierButton({ modifier, active, onToggle }: ModifierButtonProps) {
   );
   return (
     <Pressable testID={`terminal-key-${modifier}`} onPress={handlePress} style={pressableStyle}>
-      <Text style={textStyle}>{MODIFIER_LABELS[modifier]}</Text>
+      <Text style={textStyle}>{label}</Text>
     </Pressable>
   );
 }
@@ -154,6 +138,7 @@ export function TerminalPane({
   isPaneFocused,
   onOpenFileExplorer,
 }: TerminalPaneProps) {
+  const { t } = useTranslation();
   const isAppVisible = useAppVisible();
   const { theme } = useUnistyles();
   const xtermTheme = useMemo(() => toXtermTheme(theme.colors.terminal), [theme]);
@@ -650,7 +635,7 @@ export function TerminalPane({
   if (!client || !isConnected) {
     return (
       <View style={styles.centerState}>
-        <Text style={styles.stateText}>Host is not connected</Text>
+        <Text style={styles.stateText}>{t.terminalPane.hostNotConnected}</Text>
       </View>
     );
   }
@@ -703,16 +688,31 @@ export function TerminalPane({
         <View style={styles.keyboardContainer} testID="terminal-virtual-keyboard">
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             <View style={styles.keyboardRow}>
-              {(Object.keys(MODIFIER_LABELS) as Array<keyof ModifierState>).map((modifier) => (
+              {[
+                { modifier: "ctrl" as const, label: t.terminalPane.ctrl },
+                { modifier: "shift" as const, label: t.terminalPane.shift },
+                { modifier: "alt" as const, label: t.terminalPane.alt },
+              ].map(({ modifier, label }) => (
                 <ModifierButton
                   key={modifier}
                   modifier={modifier}
+                  label={label}
                   active={modifiers[modifier]}
                   onToggle={toggleModifier}
                 />
               ))}
 
-              {KEY_BUTTONS.map((button) => (
+              {[
+                { id: "esc", label: t.terminalPane.esc, key: "Escape" },
+                { id: "tab", label: t.terminalPane.tab, key: "Tab" },
+                { id: "up", label: "↑", key: "ArrowUp" },
+                { id: "down", label: "↓", key: "ArrowDown" },
+                { id: "left", label: "←", key: "ArrowLeft" },
+                { id: "right", label: "→", key: "ArrowRight" },
+                { id: "enter", label: t.terminalPane.enter, key: "Enter" },
+                { id: "backspace", label: t.terminalPane.backspace, key: "Backspace" },
+                { id: "c", label: "C", key: "c" },
+              ].map((button) => (
                 <VirtualKeyButton
                   key={button.id}
                   id={button.id}

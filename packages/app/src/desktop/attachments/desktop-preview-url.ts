@@ -1,10 +1,13 @@
 import type { AttachmentMetadata } from "@/attachments/types";
 import { fileUriToPath } from "@/attachments/utils";
 import { invokeDesktopCommand } from "@/desktop/electron/invoke";
-import { Buffer } from "buffer";
-
 function base64ToUint8Array(base64: string): Uint8Array {
-  return new Uint8Array(Buffer.from(base64, "base64"));
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
 }
 
 const activeObjectUrls = new Set<string>();

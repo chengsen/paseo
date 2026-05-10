@@ -7,6 +7,7 @@ import { FOOTER_HEIGHT, MAX_CONTENT_WIDTH } from "@/constants/layout";
 import { useHostRuntimeClient, useHostRuntimeIsConnected } from "@/runtime/host-runtime";
 import { useKeyboardShiftStyle } from "@/hooks/use-keyboard-shift-style";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/i18n";
 import type { Theme } from "@/styles/theme";
 
 interface ArchivedAgentCalloutProps {
@@ -15,6 +16,7 @@ interface ArchivedAgentCalloutProps {
 }
 
 export function ArchivedAgentCallout({ serverId, agentId }: ArchivedAgentCalloutProps) {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const client = useHostRuntimeClient(serverId);
   const isConnected = useHostRuntimeIsConnected(serverId);
@@ -43,14 +45,14 @@ export function ArchivedAgentCallout({ serverId, agentId }: ArchivedAgentCallout
       <View style={styles.inputAreaContainer}>
         <View style={styles.inputAreaContent}>
           <View style={styles.callout}>
-            <Text style={styles.calloutText}>This agent is archived</Text>
+            <Text style={styles.calloutText}>{t.archivedAgent.archived}</Text>
             <Button
               size="sm"
               variant="secondary"
               onPress={handleUnarchive}
               disabled={!isConnected || isUnarchiving}
             >
-              Unarchive
+              {t.archivedAgent.unarchive}
             </Button>
           </View>
         </View>

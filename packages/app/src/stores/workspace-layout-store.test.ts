@@ -1,20 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("@react-native-async-storage/async-storage", () => {
-  const storage = new Map<string, string>();
-  return {
-    default: {
-      getItem: vi.fn(async (key: string) => storage.get(key) ?? null),
-      setItem: vi.fn(async (key: string, value: string) => {
-        storage.set(key, value);
-      }),
-      removeItem: vi.fn(async (key: string) => {
-        storage.delete(key);
-      }),
-    },
-  };
-});
-
 import type { WorkspaceTab } from "@/stores/workspace-tabs-store";
 import {
   buildWorkspaceTabPersistenceKey,
@@ -32,6 +17,21 @@ import {
   type SplitNode,
   type SplitPane,
 } from "@/stores/workspace-layout-store";
+
+vi.mock("@react-native-async-storage/async-storage", () => {
+  const storage = new Map<string, string>();
+  return {
+    default: {
+      getItem: vi.fn(async (key: string) => storage.get(key) ?? null),
+      setItem: vi.fn(async (key: string, value: string) => {
+        storage.set(key, value);
+      }),
+      removeItem: vi.fn(async (key: string) => {
+        storage.delete(key);
+      }),
+    },
+  };
+});
 
 const SERVER_ID = "server-1";
 const WORKSPACE_ID = "ws-main";

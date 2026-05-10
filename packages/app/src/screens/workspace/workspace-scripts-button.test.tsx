@@ -111,13 +111,17 @@ vi.mock("@/components/ui/dropdown-menu", () => ({
 }));
 
 vi.mock("lucide-react-native", () => {
-  const createIcon = (name: string) => (props: Record<string, unknown>) =>
-    React.createElement("span", {
-      "data-icon": name,
-      "data-color": props.color,
-      "data-size": props.size,
-      "data-testid": props.testID,
-    });
+  const createIcon = (name: string) => {
+    const Icon = (props: Record<string, unknown>) =>
+      React.createElement("span", {
+        "data-icon": name,
+        "data-color": props.color,
+        "data-size": props.size,
+        "data-testid": props.testID,
+      });
+    Icon.displayName = `Icon(${name})`;
+    return Icon;
+  };
   return {
     ChevronDown: createIcon("ChevronDown"),
     ExternalLink: createIcon("ExternalLink"),
